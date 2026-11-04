@@ -44,6 +44,9 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 
 ## GET
 - [GET] `/api/logs` - Retrieve list of logs, with filters [date, microservice, level, message], pagination.
+  - Filters combine with AND: exact microservice and level, UTC day (`YYYY-MM-DD`), and case-insensitive literal message substring.
+  - Pagination: `page=1`, `limit=20` by default, maximum limit 100; sort by date descending then ID descending.
+  - Response: `{ data, pagination: { page, limit, total, totalPages } }`. Invalid queries return JSON HTTP 400.
 - [GET] `/api/analysis/` - Retrieve List of analysis, with filters [date, microservice, message, status], pagination.
 - [GET] `/api/analysis/:id` - Retrieve the analysis by {id}
 - [GET] `/api/health` - Health check

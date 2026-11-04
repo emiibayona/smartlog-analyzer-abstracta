@@ -14,7 +14,9 @@ files inside Docker rather than in an OS-specific host directory.
 
 The minimal Express API implements `GET /api`, returning HTTP 200 with plain text
 `OK`. It listens on `0.0.0.0:3000` by default and supports `HOST` and `PORT`.
-Database seeding is available; API database operations and log analysis are not implemented yet.
+Database seeding and log retrieval are available; log ingestion and analysis are not implemented yet.
+The API connects to `MONGODB_URI` before accepting requests and requires MongoDB
+for startup. Local execution requires an accessible database configured in `.env`.
 
 To start MongoDB alone:
 
@@ -60,6 +62,47 @@ After application or dependency changes, run `docker compose up --build -d`.
 Source code is copied into the image; this setup does not provide live reload.
 
 ## Local development and tests
+
+### Retrieve logs
+
+`GET /api/logs` returns `{ data, pagination: { page, limit, total, totalPages } }`.
+Logs include a string `id` and are sorted by date descending, then ID descending.
+
+| Query parameter | Behavior |
+| --- | --- |
+| `date` | Valid `YYYY-MM-DD` UTC calendar day |
+| `microservice` | Exact name; at most 200 characters |
+| `level` | `info`, `warn`, or `error` |
+| `message` | Case-insensitive literal substring; at most 500 characters |
+| `page` | Positive integer, default `1` |
+| `limit` | Positive integer up to `100`, default `20` |
+
+Filters combine with AND. Empty, repeated, unknown, or invalid parameters return
+HTTP 400 with `{ "error": "..." }`. Unknown microservices and out-of-range pages
+return HTTP 200 with empty data. No matches produce `totalPages: 0`.
+
+Example: `http://localhost:3000/api/logs?microservice=inventory-service&level=error&page=1&limit=10`.
+Counts and page data are separate reads, so concurrent writes may change totals.
+
+### Database integration and E2E tests
+
+`npm test` runs unit and isolated HTTP tests. Run real database integration and
+E2E tests through Docker (the test image includes development dependencies):
+
+```sh
+docker compose --profile test build tests
+docker compose --profile test run --rm tests
+```
+
+After application changes, rebuild the API first with
+`docker compose up --build -d --wait api`.
+Database integration and E2E suites use Node's test runner to avoid a MongoDB
+driver handshake issue in Jest's sandbox. Integration tests use the application
+and MongoDB; E2E tests send HTTP requests
+to the running API container. Both insert uniquely named synthetic fixtures and
+remove only their own IDs afterward. Existing seeded logs remain untouched.
+For tests outside Docker, supply `MONGODB_URI` and, for E2E, `API_BASE_URL`, then
+run `npm run test:integration` or `npm run test:e2e`.
 
 ### Seed demo logs
 

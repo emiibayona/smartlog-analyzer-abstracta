@@ -5,7 +5,10 @@
   "scripts": {
     "seed": "node --env-file-if-exists=.env db/seed.js",
     "start": "node --env-file-if-exists=.env src/server.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:integration": "node --test tests/integration/logs.test.js",
+    "test:e2e": "node --test tests/e2e/logs.test.js",
+    "test:docker": "npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
     "cors": "^2.8.6",

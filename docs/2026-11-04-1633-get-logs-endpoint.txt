@@ -1,0 +1,31 @@
+Task: Implement the first architecture endpoint, GET /api/logs, including E2E tests.
+User approved the plan.
+
+Added query validation, thin controller, log query service, and centralized error
+middleware. Filters combine exact microservice/level, UTC day, and escaped
+case-insensitive literal message matching. Pagination defaults to page 1/limit 20
+with maximum limit 100; sorting uses descending date and _id. Responses expose
+string id plus pagination metadata. Database connection precedes HTTP startup.
+Added graceful process shutdown and an API readiness health check.
+
+Added unit/HTTP tests, real database integration tests, Docker HTTP E2E tests,
+Dockerfile.test, and an opt-in Compose test service. Fixtures use unique service
+names and cleanup only their own IDs. Updated architecture and README contracts.
+
+Verified:
+- 41 Jest unit and isolated HTTP tests passed.
+- Compose validation passed.
+- API image built and API container initially passed its readiness health check.
+- Final integration and E2E files passed Node syntax checks.
+- git diff --check passed.
+
+Unresolved verification:
+Initial Jest database integration run failed with MongoDB client metadata
+handshake errors; converted real database suites to Node's test runner while
+retaining Jest for unit tests. Rebuilding the test image then failed because
+Docker's storage became read-only:
+write /var/lib/docker/buildkit/containerd-overlayfs/metadata_v2.db: read-only file system
+Subsequent Docker status requests stalled and localhost HTTP verification failed.
+Integration/E2E success and final running state are therefore not verified.
+Docker Desktop needs recovery before rerunning the documented commands.
+No volume cleanup, database resets, or Docker factory resets were performed.

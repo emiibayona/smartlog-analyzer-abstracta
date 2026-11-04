@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const apiRoutes = require('./routes/apiRoutes');
+const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 app.disable('x-powered-by');
@@ -20,9 +21,6 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.use((error, req, res, next) => {
-  console.error(error);
-  res.status(500).json({ error: 'Internal server error' });
-});
+app.use(errorHandler);
 
 module.exports = app;

@@ -12,6 +12,12 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/smartlog
     ports:
       - "127.0.0.1:${API_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     depends_on:
       mongodb:
         condition: service_healthy
@@ -29,6 +35,20 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
+
+  tests:
+    profiles: [test]
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/smartlog
+      API_BASE_URL: http://api:3000
+    depends_on:
+      api:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
 
 volumes:
   mongodb_data:
