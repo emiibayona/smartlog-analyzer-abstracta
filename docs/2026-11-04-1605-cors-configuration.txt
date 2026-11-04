@@ -1,0 +1,16 @@
+Task: Add CORS configured through .env; implementation plan approved by user.
+
+Added cors middleware with an exact comma-separated CORS_ALLOWED_ORIGINS allowlist.
+Default: http://localhost:3000. Empty configuration grants no cross-origin access.
+Enabled automatic preflight handling. Requests without Origin continue to work.
+Disallowed origins receive no access-control-allow-origin response header.
+Updated npm start to load optional .env through Node's built-in support.
+Passed CORS_ALLOWED_ORIGINS through Compose; documented settings in .env.example
+and README. Credentials are not enabled.
+
+Validation: All 10 Jest tests passed. Compose configuration validated, API image
+rebuilt, and API container restarted successfully. Live HTTP checks passed for
+allowed origin, disallowed origin, and OPTIONS preflight. git diff --check passed.
+Production image install reported zero audit vulnerabilities. Full dependency
+install reported 19 findings (3 low, 16 moderate) in the development dependency tree.
+API and MongoDB left running.

@@ -61,6 +61,21 @@ Source code is copied into the image; this setup does not provide live reload.
 
 ## Local development and tests
 
+### CORS configuration
+
+Copy `.env.example` to `.env` and set `CORS_ALLOWED_ORIGINS` to exact browser
+origins separated by commas, for example
+`http://localhost:3000,http://localhost:5173`. The default is
+`http://localhost:3000`; an empty value disables cross-origin access.
+Schemes and ports must match. Preflight requests are handled automatically.
+CORS controls browser access to responses; it does not authenticate clients or
+block requests from tools such as curl.
+
+`npm start` loads `.env` using Node's built-in environment file support. Existing
+environment variables take precedence. Compose reads `.env` and passes the
+allowlist into the API container. Restart the local app after changes, or run
+`docker compose up -d --force-recreate api` for Docker.
+
 With Node.js and npm installed:
 
 ```sh
