@@ -1,0 +1,14 @@
+Task: Repeat Docker validation after Docker Desktop installation.
+
+Docker Desktop is installed, but its binaries were missing from this session's PATH.
+Used /Applications/Docker.app/Contents/Resources/bin for Docker and its credential helper.
+Verified Docker client and engine 29.9.2 and Compose v5.6.1.
+docker compose config --quiet passed.
+docker compose up -d --wait mongodb passed; container reported healthy.
+docker compose exec -T mongodb mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'
+returned { ok: 1 }.
+
+MongoDB was left running with its named volumes. No Docker configuration changes
+were necessary. The API image remains unbuildable until package.json,
+package-lock.json, an npm start script, and application code are implemented.
+These checks validate this host only, not execution on Windows or Linux hosts.

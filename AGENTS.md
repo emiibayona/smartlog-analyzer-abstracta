@@ -23,7 +23,7 @@ The API will Read, analyze, store and process the logs.
 `db/` - Migrations and seeds
 `db/models` - For moongose schemas
 `Dockerfile`
-`docker-compose.yml`
+`docker-compose.yaml`
 `.env.example`
 
 ## Development guidelines

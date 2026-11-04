@@ -1,0 +1,12 @@
+Task: Create a portable Docker setup for the planned API and MongoDB.
+Plan approved by the user before implementation.
+
+Added Dockerfile using Node 25, npm ci, production dependencies, and non-root execution.
+Added docker-compose.yaml with API, MongoDB 8.0, database readiness checks,
+named persistent volumes, and a localhost-only API port.
+Added .dockerignore, .env.example, and README setup and data-management instructions.
+No forced CPU architecture, host bind mounts, or host shell scripts are required.
+
+Validation: Docker CLI is unavailable in this environment, so Compose validation,
+image builds, and container smoke tests could not run. API code, package.json,
+and package-lock.json do not exist yet and are documented prerequisites.
