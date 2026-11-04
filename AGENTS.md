@@ -41,6 +41,7 @@ The API will Read, analyze, store and process the logs.
 ## Conventions 
 - Use camelCase to variables and functions
 - Be clear with the logic. Create a minimum description at every service.
+- Dont add .gitkeep
 
 ## Workflow
 - Before implementation, propose a plan and wait for approval.

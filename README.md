@@ -10,16 +10,13 @@ The images support x86-64 and ARM64, including Intel and Apple Silicon Macs.
 No host Node.js or MongoDB installation is required. Named volumes keep database
 files inside Docker rather than in an OS-specific host directory.
 
-### Current prerequisites
+### Application
 
-The application has not been implemented yet. The API build requires:
+The minimal Express API implements `GET /api`, returning HTTP 200 with plain text
+`OK`. It listens on `0.0.0.0:3000` by default and supports `HOST` and `PORT`.
+Database integration and log analysis are not implemented yet.
 
-- `package.json` and a committed `package-lock.json`.
-- An `npm start` script that starts the API with production dependencies.
-- An HTTP server listening on `0.0.0.0`, using `PORT` (default `3000`).
-- A Mongoose connection using `MONGODB_URI`.
-
-Until those exist, you can start MongoDB alone:
+To start MongoDB alone:
 
 ```sh
 docker compose up -d mongodb
@@ -27,7 +24,7 @@ docker compose up -d mongodb
 
 ### Start the full stack
 
-Once the application prerequisites exist, run from the repository root:
+Run from the repository root:
 
 ```sh
 docker compose config --quiet
@@ -36,8 +33,7 @@ docker compose ps
 docker compose logs -f api
 ```
 
-The API will be available at `http://localhost:3000`. Once implemented, its health
-endpoint will be `http://localhost:3000/api/health`.
+Check the API at `http://localhost:3000/api`. `/api/health` is not implemented yet.
 
 Optionally copy `.env.example` to `.env` using your editor and set `API_PORT` to
 change the host port. Compose reads `.env` automatically. The database hostname
@@ -62,3 +58,15 @@ docker compose down --volumes
 
 After application or dependency changes, run `docker compose up --build -d`.
 Source code is copied into the image; this setup does not provide live reload.
+
+## Local development and tests
+
+With Node.js and npm installed:
+
+```sh
+npm ci
+npm test
+npm start
+```
+
+The Docker image uses Node 25 and installs production dependencies only.

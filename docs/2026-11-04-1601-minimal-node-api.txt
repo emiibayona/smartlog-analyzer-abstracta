@@ -1,0 +1,19 @@
+Task: Implement GET /api returning OK and build/start its Docker container.
+User approved the implementation plan.
+
+Added Express 5 application, router, controller, and server entrypoint with HOST
+and PORT configuration. Added consistent JSON 404 and internal-error responses.
+Added package.json, npm lockfile, Jest/Supertest route tests, and README commands.
+No database operations were added to this minimal endpoint.
+
+Validation:
+- npm test: 2 tests passed (GET /api and unknown route).
+  Required socket access outside the sandbox for Supertest.
+- docker compose config --quiet passed.
+- docker compose up --build -d --wait api built and started the API.
+- HTTP request to http://localhost:3000/api returned 200 and plain text OK.
+- Production npm install inside the image reported zero vulnerabilities.
+- Full dependency install reported 19 audit findings (1 low, 18 moderate),
+  in dependencies excluded from the production install; not remediated in this task.
+
+API and MongoDB containers were left running.
