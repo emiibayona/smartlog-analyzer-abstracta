@@ -14,7 +14,7 @@ files inside Docker rather than in an OS-specific host directory.
 
 The minimal Express API implements `GET /api`, returning HTTP 200 with plain text
 `OK`. It listens on `0.0.0.0:3000` by default and supports `HOST` and `PORT`.
-Database integration and log analysis are not implemented yet.
+Database seeding is available; API database operations and log analysis are not implemented yet.
 
 To start MongoDB alone:
 
@@ -60,6 +60,28 @@ After application or dependency changes, run `docker compose up --build -d`.
 Source code is copied into the image; this setup does not provide live reload.
 
 ## Local development and tests
+
+### Seed demo logs
+
+Seed 24 synthetic warehouse logs (six per microservice), with successful actions,
+warnings, repeated timeouts, and recovery. Fixed UTC timestamps on November 4,
+2026 make the dataset repeatable. Stable MongoDB IDs prevent duplicates; reruns
+insert missing demo logs without overwriting existing data. No collections are
+cleared and seeding does not run automatically at startup.
+
+```sh
+docker compose up --build -d --wait api
+docker compose exec -T api npm run seed
+```
+
+For local execution, install dependencies with `npm ci`, configure `MONGODB_URI`
+in `.env` for an accessible MongoDB instance, then run `npm run seed`. The Compose
+database has no published port, so use the Docker command for that database.
+Compose supplies `mongodb://mongodb:27017/smartlog` inside the container.
+
+Logs are stored in the `logs` collection. Mongoose provides `_id` and the JSON
+`id` virtual. `payload` is optional because these fixtures are text-only;
+no file resources or AI-generated analyses are fabricated.
 
 ### CORS configuration
 

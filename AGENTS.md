@@ -1,6 +1,12 @@
 # Smart log Analyzer
 A tool to analyze logs from multiple microservices to identify patterns and generate insights.
 The API will Read, analyze, store and process the logs.
+The microservices will be (an example took from net to give more reality):
+
+- inventory-service: Tracks real-time stock levels, SKU quantities, and serial numbers across all zones.
+- replenishment-service: Triggers automated restock workflows from bulk storage to active picking bins.
+- cycle-counting-service: Coordinates continuous inventory auditing, discrepancies, and stock adjustments.
+- slotting-service: Optimizes warehouse layout by analyzing product velocity and placing fast-moving items closer to packing stations.
 
 ## Stack
 - Framework: Node 25 and Express 5.

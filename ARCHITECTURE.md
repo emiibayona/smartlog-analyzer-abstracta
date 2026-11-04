@@ -7,6 +7,7 @@
     - 
 ## Testing
     Going with Jest since it's powerfull and common tests framework for Node. Doing Unitary and E2E.
+    Taking the names of microservices, we will generate a logs for actions with errors and ok responses.
 ## Docker as a project requeriment.
 
 ## Go with Javascript instead Typescrypt since i'm not going deeply in this case with this api, but Typescript will provide more readiblity in a bigger project.

@@ -1,0 +1,20 @@
+Task: Add initial synthetic logs for the four documented warehouse microservices.
+User approved implementation plan.
+
+Added Mongoose Log schema, 24 deterministic demo records (six per service),
+and npm run seed with optional .env loading and required MONGODB_URI.
+Data includes successful actions, warnings, repeated errors, and recoveries.
+Payload is optional; these fixtures contain text and do not reference fake files.
+Stable ObjectIds with $setOnInsert preserve existing records and avoid duplicates.
+Added fixture and schema validation tests plus README and .env.example guidance.
+
+Validation:
+- All 19 Jest tests passed.
+- Compose configuration validation and API image build/start passed.
+- First Docker seed run: 24 inserted, 0 already present.
+- Second Docker seed run: 0 inserted, 24 already present.
+- Database aggregation confirmed six records for each microservice.
+- Production dependency installation reported zero vulnerabilities; development
+  dependencies retain the existing 19 audit findings.
+
+API and MongoDB were left running with the demo data. No existing data was deleted.
