@@ -26,11 +26,11 @@ test('invalid mode in an actual environment file does not crash the API', { time
       let exited;
       try {
         const file = path.join(directory, '.env');
-        await writeFile(file, `ANALYSIS_MODE="${mode}"\nOPENAI_API_KEY=synthetic-key\nOPENAI_MODEL=test-model\n`, { mode: 0o600 });
+        await writeFile(file, `ANALYSIS_MODE="${mode}"\nGEMINI_API_KEY=synthetic-key\nGEMINI_MODEL=test-model\n`, { mode: 0o600 });
         const port = await availablePort();
         const env = { ...process.env, HOST: '127.0.0.1', PORT: String(port), NODE_ENV: 'test' };
         // Let Node load these exclusively from the temporary .env, never the developer's key.
-        for (const key of ['ANALYSIS_MODE', 'OPENAI_API_KEY', 'OPENAI_MODEL']) delete env[key];
+        for (const key of ['ANALYSIS_MODE', 'GEMINI_API_KEY', 'GEMINI_MODEL']) delete env[key];
         const script = `
           const { analyzeLogs } = require('./src/services/analysisEngine');
           analyzeLogs([]).then(() => process.exit(2)).catch(error => {

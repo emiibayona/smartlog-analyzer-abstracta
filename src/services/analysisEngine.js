@@ -2,7 +2,7 @@ const { loadAnalysisEnvironment } = require('../config/analysisEnvironment');
 const { prepareAnalysisInput } = require('../utils/analysisInput');
 const { validateReport } = require('../utils/analysisReport');
 const { AnalysisError } = require('../utils/analysisErrors');
-const { createOpenAIAnalysisAdapter } = require('./openaiAnalysisAdapter');
+const { createGeminiAnalysisAdapter } = require('./geminiAnalysisAdapter');
 const { createAnalysisRepository } = require('../repositories/analysisRepository');
 const { log } = require('../utils/logger');
 
@@ -10,14 +10,14 @@ const { log } = require('../utils/logger');
 async function analyzeLogs(logs, options = {}) {
   const config = options.config || loadAnalysisEnvironment();
   const prepared = prepareAnalysisInput(logs, config);
-  const provider = options.provider || createOpenAIAnalysisAdapter(config);
+  const provider = options.provider || createGeminiAnalysisAdapter(config);
   const repository = options.repository || createAnalysisRepository(config.persistenceTimeoutMs);
   const id = await repository.create({
     microservice: prepared.microservices.length === 1 ? prepared.microservices[0] : 'multiple',
     microservices: prepared.microservices, date: new Date(), status: 'Pending',
     logIds: prepared.logIds, inputReferences: prepared.references,
     logCount: prepared.input.length, chunkCount: prepared.chunks.length,
-    model: config.model, mode: config.mode, promptVersion: 'warehouse-logs-v2',
+    provider: 'gemini', model: config.model, mode: config.mode, promptVersion: 'warehouse-logs-v3',
   });
   const deadline = Date.now() + config.totalTimeoutMs;
   async function ask(input, ids) {

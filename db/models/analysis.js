@@ -13,6 +13,7 @@ const analysisSchema = new mongoose.Schema({
   logCount: { type: Number },
   chunkCount: { type: Number },
   model: { type: String },
+  provider: { type: String },
   mode: { type: String },
   promptVersion: { type: String },
   report: { type: mongoose.Schema.Types.Mixed },

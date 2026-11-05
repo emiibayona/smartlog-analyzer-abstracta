@@ -4,7 +4,7 @@ const { inputLogs } = require('./helpers/analysisEngineFixtures');
 
 const original = { ...process.env };
 afterEach(() => {
-  for (const key of ['OPENAI_API_KEY', 'OPENAI_MODEL', 'ANALYSIS_MODE']) {
+  for (const key of ['GEMINI_API_KEY', 'GEMINI_MODEL', 'ANALYSIS_MODE']) {
     if (original[key] === undefined) delete process.env[key];
     else process.env[key] = original[key];
   }
@@ -12,8 +12,8 @@ afterEach(() => {
 
 test.each(['', ' ', 'Synthesis', 'invalid mode', '*', 'x'.repeat(65)])(
   'invalid ANALYSIS_MODE %j rejects analysis before any storage or provider work', async (mode) => {
-    process.env.OPENAI_API_KEY = 'synthetic-key';
-    process.env.OPENAI_MODEL = 'test-model';
+    process.env.GEMINI_API_KEY = 'synthetic-key';
+    process.env.GEMINI_MODEL = 'test-model';
     process.env.ANALYSIS_MODE = mode;
     const repository = { create: jest.fn(), update: jest.fn() };
     const provider = { analyze: jest.fn() };
@@ -25,5 +25,5 @@ test.each(['', ' ', 'Synthesis', 'invalid mode', '*', 'x'.repeat(65)])(
 );
 
 test('an absent mode uses synthesis rather than crashing', () => {
-  expect(loadAnalysisEnvironment({ OPENAI_API_KEY: 'synthetic', OPENAI_MODEL: 'test-model' }).mode).toBe('synthesis');
+  expect(loadAnalysisEnvironment({ GEMINI_API_KEY: 'synthetic', GEMINI_MODEL: 'test-model' }).mode).toBe('synthesis');
 });

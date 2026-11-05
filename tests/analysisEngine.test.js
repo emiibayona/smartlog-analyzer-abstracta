@@ -13,7 +13,7 @@ test('valid analysis is persisted only after schema/evidence validation', async 
   const provider = { analyze: jest.fn().mockResolvedValue(report()) };
   const result = await analyzeLogs(inputLogs(), { config, provider, repository });
   expect(result.status).toBe('Completed');
-  expect(repository.create.mock.calls[0][0]).toMatchObject({ status: 'Pending', logCount: 2, microservice: 'multiple', model: 'test-model' });
+  expect(repository.create.mock.calls[0][0]).toMatchObject({ status: 'Pending', logCount: 2, microservice: 'multiple', model: 'test-model', provider: 'gemini' });
   expect(repository.update.mock.calls[0][1].status).toBe('In progress');
   expect(repository.update.mock.calls[1][1]).toMatchObject({ status: 'Completed', message: report().summary, levelCounts: { info: 0, warn: 0, error: 2 } });
   expect(JSON.stringify(provider.analyze.mock.calls)).not.toContain('synthetic-secret');
@@ -106,11 +106,12 @@ test('secret redaction covers common tokens, credentials, and API keys', () => {
   const value = redactSecrets('Authorization: Bearer demo-token password="demo-password with spaces" token=demo-token mongodb://demo-user:demo-pass@host/db sk-abcdefghijk');
   expect(value).not.toMatch(/demo-token|demo-password|demo-user|demo-pass|sk-abcdefghijk/);
   expect(value).not.toContain('with spaces');
+  expect(redactSecrets(`GEMINI_API_KEY=AIza${'x'.repeat(35)}`)).not.toContain('AIza');
 });
 test('engine configuration is optional until invocation and validates required values', () => {
-  expect(() => loadAnalysisEnvironment({})).toThrow('OPENAI_API_KEY');
-  expect(() => loadAnalysisEnvironment({ OPENAI_API_KEY: 'synthetic' })).toThrow('OPENAI_MODEL');
-  const env = { OPENAI_API_KEY: 'synthetic', OPENAI_MODEL: 'test-model' };
+  expect(() => loadAnalysisEnvironment({})).toThrow('GEMINI_API_KEY');
+  expect(() => loadAnalysisEnvironment({ GEMINI_API_KEY: 'synthetic' })).toThrow('GEMINI_MODEL');
+  const env = { GEMINI_API_KEY: 'synthetic', GEMINI_MODEL: 'test-model' };
   expect(loadAnalysisEnvironment(env).requestTimeoutMs).toBe(30000);
   expect(loadAnalysisEnvironment(env).mode).toBe('synthesis');
   expect(loadAnalysisEnvironment({ ...env, ANALYSIS_MODE: 'patterns' }).mode).toBe('patterns');

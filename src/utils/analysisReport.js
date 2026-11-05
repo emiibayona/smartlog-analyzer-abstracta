@@ -28,7 +28,8 @@ function redactSecrets(value) {
     .replace(/\b((?:password|passwd|secret|token|api[_-]?key|authorization)["']?\s*[:=]\s*)(["'])([^"']*)\2/gi, '$1$2[REDACTED]$2')
     .replace(/\b((?:password|passwd|secret|token|api[_-]?key|authorization)["']?\s*[:=]\s*["']?)[^\s,;"'}]+/gi, '$1[REDACTED]')
     .replace(/(\b[a-z][a-z0-9+.-]*:\/\/)[^\s/@]+:[^\s/@]+@/gi, '$1[REDACTED]@')
-    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[REDACTED]');
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, '[REDACTED]')
+    .replace(/\bAIza[A-Za-z0-9_-]{20,}/g, '[REDACTED]');
 }
 
 function exactKeys(value, keys) {

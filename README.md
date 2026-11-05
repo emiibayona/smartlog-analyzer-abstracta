@@ -163,11 +163,12 @@ The internal `analyzeLogs(logs)` service in `src/services/analysisEngine.js` ana
 a batch and saves its findings. No analysis POST endpoint is implemented in this
 wave. The caller must establish the MongoDB connection before invoking it.
 
-Set `OPENAI_API_KEY` and `OPENAI_MODEL` in your local `.env`. The key entry is an
-empty placeholder until you supply your own OpenAI API key; a Codex CLI login is
-not used. Choose an API model available to your account that supports Responses
-structured outputs. The engine uses `https://api.openai.com/v1/responses`, requests
-strict JSON Schema output, sets `store: false`, and does not enable tools or retries.
+Set `GEMINI_API_KEY` and `GEMINI_MODEL` in your local `.env`. Existing local values
+are preserved; missing entries are placeholders until configured. Choose a Gemini
+model available to your account that supports JSON Schema structured output.
+The engine calls Google's `v1beta/models/{model}:generateContent` endpoint using
+the `x-goog-api-key` header, JSON response MIME type, and a response JSON Schema.
+It does not enable tools or automatic retries. OpenAI settings are no longer used.
 Normal API startup and existing endpoints work without these optional settings.
 Compose passes the settings to the application; test services never receive the
 real key. No key or actual log contents are written to operational logs.
@@ -206,9 +207,13 @@ provider phase across chunks and synthesis. Database writes have independent
 tokens; incomplete/refused/malformed responses fail instead of being saved as
 successful reports. There are no automatic retries or partial-success results.
 
+Gemini safety blocks/refusals, incomplete generations, and unexpected candidates
+are treated as failures, not partial successes. Non-thought text parts are combined
+and validated locally, including schema shape and evidence IDs.
+
 Records transition `Pending` → `In progress` → `Completed` or `Failed`.
 Completed records contain a structured `report`, JSON-string `result` for
-compatibility, summary `message`, model/prompt version, log/chunk counts, level
+compatibility, summary `message`, provider (`gemini`), model/prompt version, log/chunk counts, level
 counts, timestamps, and input references. Mixed-service batches use
 `microservice: "multiple"` with an explicit `microservices` array. Raw log batches
 are not duplicated in the analysis collection; non-stored inputs have positional
@@ -219,8 +224,9 @@ record. Durable job recovery/retry is outside this wave.
 
 Unit tests cover chunking, synthesis, redaction, evidence validation, timeouts,
 and persistence failures. Integration tests use real MongoDB plus a local HTTP
-provider stub for valid output, wrong schema/JSON, refusal, incomplete output,
-oversized responses, provider errors, and timeout. They make no paid OpenAI calls;
+Gemini HTTP stub for valid output, wrong schema/JSON, prompt/candidate safety
+blocks, incomplete output, multipart text, oversized responses, provider errors,
+and timeout. They make no paid or live Gemini calls;
 real-model quality and account access require a separate opt-in evaluation.
 
 ### Running database integration and E2E tests

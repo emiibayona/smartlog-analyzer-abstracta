@@ -1,0 +1,29 @@
+Task: Replace the OpenAI analysis engine adapter with Google Gemini; user approved.
+
+Replaced adapter with Gemini GenerateContent REST integration using x-goog-api-key
+header, system instructions, contents, JSON MIME type, and responseJsonSchema.
+Kept bounded response reading, deadlines, local schema/evidence validation,
+redaction, chunking/synthesis, configured mode, and persistence state handling.
+Added handling for prompt/candidate safety blocks, incomplete or absent candidates,
+and multipart output with thought parts excluded. New records identify provider
+gemini and prompt version warehouse-logs-v3; historical records are not relabeled.
+Added Google API-key-pattern redaction and Gemini-specific adapter unit tests.
+
+Renamed provider stub and updated integration tests to Gemini's HTTP contract.
+Migrated configuration, invalid-mode startup regression tests, Docker, environment
+example, README, and architecture to GEMINI_API_KEY/GEMINI_MODEL.
+Ensured local Gemini settings exist without replacing any existing values or
+displaying secrets. Existing GOOGLE_API_KEY was reused only if present and the
+GEMINI_API_KEY variable did not exist. Unrelated/old .env settings were preserved.
+GEMINI_API_KEY and GEMINI_MODEL are currently empty; user must configure them.
+ANALYSIS_MODE remains synthesis. No new endpoints added.
+
+Validation: 185 unit/HTTP tests, 30 integration test results, and 21 E2E test
+results passed. Compose config validation and all image builds passed. Runtime API
+reported healthy. .env remains ignored. git diff --check passed.
+No live Gemini calls, real-key use, or paid API calls were made. Real-model quality,
+model compatibility, and account access remain unverified without local config.
+Application services left running; isolated test services stopped.
+
+References fetched: https://ai.google.dev/api/generate-content and Google's
+structured-output documentation (redirects to current AI Studio documentation).

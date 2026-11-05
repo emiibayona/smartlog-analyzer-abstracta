@@ -12,9 +12,11 @@
 
 ## Go with Javascript instead Typescrypt since i'm not going deeply in this case with this api, but Typescript will provide more readiblity in a bigger project.
 
-## Integration with Codex
-    To analyze a bunch of logs and find patterns and repetitive issues to generate insights.
-    Our services will call an AI API (Codex) to check the logs (if logs are too long, will be in chunks), after that, our service process the response, create the analysis in the DB and retrieve the result, our service will handle the errors.
+## Integration with Google Gemini
+Analyze batches of logs for patterns and repetitive issues using Gemini's
+GenerateContent API with JSON Schema output. Chunk large batches, validate and
+synthesize findings, then persist the report. The engine handles provider errors,
+safety blocks, wrong output formats, and timeouts without persisting partial success.
 
 ## DB
 - Every log will have this schema:
@@ -64,12 +66,13 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 - Run integration/E2E tests against a separate test API and ephemeral MongoDB instance on an isolated Docker network.
 
 ## Analysis engine — internal service, no new endpoints in this wave
-- Use the OpenAI Responses API with an API key, configurable compatible model, strict JSON Schema output, local validation, and no enabled tools or automatic retries.
+- Use Google's Gemini GenerateContent API with a key in the x-goog-api-key header, configurable compatible model, response JSON Schema, local validation, and no enabled tools or automatic retries.
 - Validate a bounded batch, redact common secrets, and analyze whole-record chunks. Correlate multi-chunk reports in a final synthesis pass; reject invalid/unknown evidence references.
 - Limit logs, serialized input, chunk count, response bytes, output tokens, request time, and total provider time. Do not silently truncate input or persist partial success.
 - Persist Pending/In progress/Completed/Failed transitions. Save validated reports, evidence references, deterministic counts, and model metadata. Store only safe failure codes on provider errors or timeouts.
 - Mixed-service analyses use microservice `multiple` plus a microservices array. Non-stored input references are positional; no raw batch or file payload content is sent/stored as metadata.
-- Configuration is optional for normal API startup, required when analyzing: OPENAI_API_KEY, OPENAI_MODEL, ANALYSIS_MODE (default synthesis), ANALYSIS_REQUEST_TIMEOUT_MS, ANALYSIS_TOTAL_TIMEOUT_MS, ANALYSIS_CHUNK_BYTES.
+- Configuration is optional for normal API startup, required when analyzing: GEMINI_API_KEY, GEMINI_MODEL, ANALYSIS_MODE (default synthesis), ANALYSIS_REQUEST_TIMEOUT_MS, ANALYSIS_TOTAL_TIMEOUT_MS, ANALYSIS_CHUNK_BYTES.
+- Persist provider `gemini` on newly generated reports; preserve historical records without relabeling their provider.
 - ANALYSIS_MODE is the configurable LLM focus, sent in every request and persisted as metadata. Internal chunk/synthesis phases remain separate from this focus.
 - Test integration with a local HTTP provider stub and isolated MongoDB: valid output, wrong formats, refusals, provider errors, and timeouts. No paid calls in automated tests.
 - Process-crash recovery, durable job queues/retries, and analysis-triggering endpoints are deferred.
