@@ -1,0 +1,17 @@
+Task: Run the complete suite and provide visual feedback as standalone HTML.
+
+Fresh results: 250 Jest unit/HTTP tests, 36 Node integration results, and 30 Node
+E2E results passed; zero failures. Node counts include parent tests and subtests.
+Coverage: lines 94.26%, branches 94.91%, statements 92.98%, functions 87.77%.
+Coverage thresholds passed. Integration/E2E coverage is not merged into Jest;
+server.js executes in real child-process tests but is uncovered in that unit report.
+
+Created docs/test-report-2026-11-05-1706.html with suite cards, source coverage,
+expandable file metrics, searchable/filterable results, durations, test-scope notes,
+and a link to coverage/lcov-report/index.html. No external resources or secrets.
+Validated all 316 displayed result rows against fresh structured output, coverage
+link existence, search, suite/status filtering, and empty-state behavior.
+
+Compose config validation and test image builds passed. Tests used isolated
+MongoDB and local Gemini stubs, with no live/billed provider requests. Test services
+stopped after completion; application services were left untouched.
