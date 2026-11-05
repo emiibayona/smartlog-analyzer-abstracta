@@ -1,5 +1,6 @@
 services:
   api:
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
@@ -59,6 +60,7 @@ services:
     networks: [test]
 
   api-test:
+    pull_policy: build
     profiles: [test]
     build:
       context: .
@@ -78,6 +80,7 @@ services:
     networks: [test]
 
   tests:
+    pull_policy: build
     profiles: [test]
     build:
       context: .

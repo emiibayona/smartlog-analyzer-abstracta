@@ -1,5 +1,9 @@
 
 # Tech decisions
+## Running the application
+- `docker compose up` builds current API source and starts the API and MongoDB.
+- `docker compose down` stops/removes application containers while preserving database volumes.
+- Test services use the opt-in `test` profile; the Docker test image defaults to all suites plus coverage.
 ## Framework
     Using Nodejs and Expressjs we can achieve a powerfull, solid and flexible backend to handle files like Logs.
 ## DB

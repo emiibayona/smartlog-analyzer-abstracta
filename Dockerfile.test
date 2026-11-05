@@ -3,4 +3,4 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-CMD ["npm", "run", "test:docker"]
+CMD ["npm", "run", "test:all"]
