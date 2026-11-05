@@ -48,7 +48,10 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
   - Pagination: `page=1`, `limit=20` by default, maximum limit 100; sort by date descending then ID descending.
   - Response: `{ data, pagination: { page, limit, total, totalPages } }`. Invalid queries return JSON HTTP 400.
 - [GET] `/api/analysis/` - Retrieve List of analysis, with filters [date, microservice, message, status], pagination.
+  - Same pagination and UTC day/literal message behavior as logs; status exactly `Pending`, `In progress`, or `Completed`.
+  - Response `{ data, pagination: { page, limit, total, totalPages } }`; unknown/repeated/invalid parameters return 400.
 - [GET] `/api/analysis/:id` - Retrieve the analysis by {id}
+  - Returns a single record with string `id`; malformed ObjectId returns 400, missing record returns 404. Query parameters are not supported.
 - [GET] `/api/health` - Health check
   - Live MongoDB ping with a bounded deadline; returns 200 when ready and 503 otherwise.
 
