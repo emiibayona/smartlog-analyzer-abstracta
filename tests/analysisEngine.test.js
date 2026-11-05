@@ -120,3 +120,32 @@ test('engine configuration is optional until invocation and validates required v
   }
   expect(() => loadAnalysisEnvironment({ ...env, ANALYSIS_CHUNK_BYTES: '0' })).toThrow();
 });
+
+test('an already-cancelled request cannot create an analysis', async () => {
+  const controller = new AbortController(); controller.abort();
+  await expect(analyzeLogs(inputLogs(), { config, repository, signal: controller.signal })).rejects.toMatchObject({ code: 'REQUEST_ABORTED' });
+  expect(repository.create).not.toHaveBeenCalled();
+});
+test('HTTP cancellation after creation persists a failed record without making a provider call', async () => {
+  const controller = new AbortController();
+  const provider = { analyze: jest.fn() };
+  await expect(analyzeLogs(inputLogs(), { config, provider, repository, signal: controller.signal, onCreated: () => controller.abort(new AnalysisError('REQUEST_TIMEOUT')) })).rejects.toMatchObject({ code: 'REQUEST_TIMEOUT' });
+  expect(provider.analyze).not.toHaveBeenCalled();
+  expect(repository.update.mock.calls.at(-1)[1].status).toBe('Failed');
+});
+test('cancellation while a provider finishes cannot become completed', async () => {
+  const controller = new AbortController();
+  const provider = { analyze: jest.fn(async () => { controller.abort(new AnalysisError('REQUEST_TIMEOUT')); return report(); }) };
+  await expect(analyzeLogs(inputLogs(), { config, provider, repository, signal: controller.signal })).rejects.toMatchObject({ code: 'REQUEST_TIMEOUT' });
+  expect(repository.update.mock.calls.some((call) => call[1].status === 'Completed')).toBe(false);
+});
+test('unexpected provider exceptions are stored as generic engine failures', async () => {
+  const provider = { analyze: async () => { throw new Error('private'); } };
+  await expect(analyzeLogs(inputLogs(), { config, provider, repository })).rejects.toMatchObject({ code: 'ANALYSIS_FAILED' });
+});
+test('a provider response arriving after the total deadline is not completed', async () => {
+  const now = jest.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValueOnce(10).mockReturnValueOnce(101);
+  try {
+    await expect(analyzeLogs(inputLogs(), { config: { ...config, totalTimeoutMs: 100 }, repository, provider: { analyze: async () => report() } })).rejects.toMatchObject({ code: 'ANALYSIS_TIMEOUT' });
+  } finally { now.mockRestore(); }
+});

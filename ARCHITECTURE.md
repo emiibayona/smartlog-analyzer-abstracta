@@ -65,7 +65,7 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 - Generate request IDs and structured operational logs without raw credentials, headers, or log payloads.
 - Run integration/E2E tests against a separate test API and ephemeral MongoDB instance on an isolated Docker network.
 
-## Analysis engine — internal service, no new endpoints in this wave
+## Analysis engine
 - Use Google's Gemini GenerateContent API with a key in the x-goog-api-key header, configurable compatible model, response JSON Schema, local validation, and no enabled tools or automatic retries.
 - Validate a bounded batch, redact common secrets, and analyze whole-record chunks. Correlate multi-chunk reports in a final synthesis pass; reject invalid/unknown evidence references.
 - Limit logs, serialized input, chunk count, response bytes, output tokens, request time, and total provider time. Do not silently truncate input or persist partial success.
@@ -75,7 +75,7 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 - Persist provider `gemini` on newly generated reports; preserve historical records without relabeling their provider.
 - ANALYSIS_MODE is the configurable LLM focus, sent in every request and persisted as metadata. Internal chunk/synthesis phases remain separate from this focus.
 - Test integration with a local HTTP provider stub and isolated MongoDB: valid output, wrong formats, refusals, provider errors, and timeouts. No paid calls in automated tests.
-- Process-crash recovery, durable job queues/retries, and analysis-triggering endpoints are deferred.
+- Process-crash recovery and durable job queues/retries are deferred. The v1 POST routes invoke the engine synchronously with a bounded HTTP deadline and cancellation.
 
 ## POST
 - [POST] `/api/logs` - Receive a log to insert
@@ -84,7 +84,12 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
   - Malformed/empty body: 400; oversized body: 413; unsupported type/encoding: 415. Transport failures are not quarantined.
   - Neither write confirmed: 503 for sender retry. Same-database fallback does not survive complete MongoDB outages; timeouts/retries can duplicate writes.
 - [POST] `/api/logs/analyze` - Receive a group of logs to analyze.
+  - Body `{ logs: [...] }`, 1–500 strict log objects; no IDs/extra fields/query parameters. Raw inputs are not ingested or quarantined.
 - [POST] `/api/logs/stored/analyze` - Receive a group of IDs of stored logs to analyze.
+  - Body `{ ids: [...] }`, 1–500 unique hexadecimal ObjectIds; preserve caller order. Any missing ID returns 404 before Gemini is called.
+  - Both analysis routes: UTF-8 JSON, 1 MiB parser limit plus engine byte/chunk bounds. Completed and persisted analysis returns 201 `{ id, status, report }`.
+  - Controlled errors: invalid input 400, oversized input 413, unsupported media 415, provider failures/wrong response/refusal 502, configuration/provider auth/rate-limit/storage errors 503, and timeouts 504. Include analysisId when available.
+  - ANALYSIS_HTTP_TIMEOUT_MS defaults to 130000 (maximum 660000). Expiry returns 504 promptly; provider transport and subsequent chunk work are cancelled. Client disconnect also cancels work. Persist Failed best-effort after cancellation; no durable background job or automatic retry.
 
 ## v2.0 TODO — fallback management (not implemented in v1)
 - GET `/api/rejected-logs`: list/filter submissions.

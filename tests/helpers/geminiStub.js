@@ -31,6 +31,7 @@ async function startGeminiStub(mode = 'valid') {
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   return {
+    setMode(value) { mode = value; },
     endpoint: `http://127.0.0.1:${server.address().port}/v1beta/models/test-model:generateContent`, requests,
     async close() {
       for (const timer of timers) clearTimeout(timer);

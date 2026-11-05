@@ -8,6 +8,7 @@ async function start() {
   const { port, host } = config;
   app.locals.queryTimeoutMs = config.queryTimeoutMs;
   app.locals.healthTimeoutMs = config.healthTimeoutMs;
+  app.locals.analysisHttpTimeoutMs = config.analysisHttpTimeoutMs;
   await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false });
   await require('../db/models/log').createIndexes();
   await require('../db/models/analysis').Analysis.createIndexes();

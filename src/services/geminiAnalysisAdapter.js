@@ -7,10 +7,13 @@ function createGeminiAnalysisAdapter(config, { endpoint = `https://generativelan
   const url = new URL(endpoint);
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname))) throw new AnalysisError('INVALID_CONFIGURATION');
   return {
-    async analyze(input, allowedIds, timeoutMs = config.requestTimeoutMs) {
+    async analyze(input, allowedIds, timeoutMs = config.requestTimeoutMs, signal) {
       const serialized = JSON.stringify(input);
       if (Buffer.byteLength(serialized) > 1000000) throw new AnalysisError('INPUT_TOO_LARGE');
       const controller = new AbortController();
+      const abort = () => controller.abort();
+      if (signal?.aborted) controller.abort();
+      else signal?.addEventListener('abort', abort, { once: true });
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
         const response = await fetch(endpoint, {
@@ -53,10 +56,11 @@ function createGeminiAnalysisAdapter(config, { endpoint = `https://generativelan
         try { report = JSON.parse(parts.map((part) => part.text).join('')); } catch { throw new AnalysisError('INVALID_RESPONSE'); }
         return validateReport(report, allowedIds);
       } catch (error) {
+        if (signal?.aborted) throw signal.reason instanceof AnalysisError ? signal.reason : new AnalysisError('REQUEST_ABORTED');
         if (controller.signal.aborted) throw new AnalysisError('PROVIDER_TIMEOUT');
         if (error instanceof AnalysisError) throw error;
         throw new AnalysisError('PROVIDER_ERROR');
-      } finally { clearTimeout(timer); }
+      } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
     },
   };
 }

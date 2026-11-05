@@ -17,7 +17,7 @@ test.each(['', ' ', 'Synthesis', 'invalid mode', '*', 'x'.repeat(65)])(
     process.env.ANALYSIS_MODE = mode;
     const repository = { create: jest.fn(), update: jest.fn() };
     const provider = { analyze: jest.fn() };
-    await expect(analyzeLogs(inputLogs(), { repository, provider })).rejects.toThrow('Invalid ANALYSIS_MODE');
+    await expect(analyzeLogs(inputLogs(), { repository, provider })).rejects.toMatchObject({ code: 'INVALID_CONFIGURATION' });
     expect(repository.create).not.toHaveBeenCalled();
     expect(repository.update).not.toHaveBeenCalled();
     expect(provider.analyze).not.toHaveBeenCalled();

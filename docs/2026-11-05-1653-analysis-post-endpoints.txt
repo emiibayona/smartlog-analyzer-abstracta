@@ -1,0 +1,38 @@
+Task: Implement approved v1 analysis POST endpoints with extensive tests and API timeout handling.
+
+Added POST /api/logs/analyze with {logs:[...]} and POST /api/logs/stored/analyze
+with {ids:[...]}. Validate strict envelope/log fields, 1-500 items, unique normalized
+ObjectIds, media type/encoding, query parameters, and 1 MiB parser/engine bounds.
+Stored lookup has bounded queries, preserves request order, and rejects missing
+IDs before provider work. Raw batches are not silently ingested or quarantined.
+Return 201 only after a completed report is persisted. Safe JSON errors map input,
+configuration, Gemini, persistence, and timeout failures; include known analysis ID.
+
+Added ANALYSIS_HTTP_TIMEOUT_MS (default 130000, max 660000). HTTP deadline returns
+504 promptly and cancels provider transport/subsequent work. Client disconnects
+also cancel the engine. Persist Failed with safe codes after cancellation when
+possible; no durable background queue or automatic retries were introduced.
+Request ID is persisted for tracing. Preserved existing .env values and appended
+the new deadline only if absent. Version 2 TODO routes remain unimplemented.
+
+Tests use real MongoDB and real HTTP with an injected local Gemini stub, never a
+production provider URL override or real credential. Added happy paths, 1/500/501
+batch boundaries, duplicate/malformed/missing IDs, input limits, chunking, provider
+errors, configuration failures, real database insertion/completion failures,
+provider/API timeouts, and client disconnect cancellation. Test database validators
+deny only unique fixture IDs and are restored afterward.
+
+Validation:
+- 250 Jest unit/HTTP tests passed.
+- 36 Node integration test results passed.
+- 30 Node E2E test results passed.
+- Coverage across all src: 92.98% statements, 94.91% branches, 87.77% functions,
+  94.26% lines. New request parser, deadline middleware, and stored submission
+  service each achieve 100% of all metrics, enforced by coverage thresholds.
+- src/server.js is exercised in child-process integration/E2E tests, not instrumented
+  by Jest unit coverage; this accounts for most uncovered functions/lines.
+- Added npm run test:coverage, baseline global thresholds, README/API contracts.
+- Compose validation, builds, readiness checks, and git diff --check passed.
+
+No live/billed Gemini calls were made. Updated application API/MongoDB left running;
+isolated test services and child test APIs stopped. Existing application logs retained.

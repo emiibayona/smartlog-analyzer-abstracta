@@ -157,11 +157,54 @@ Analyses use the `analyses` collection. Pending/in-progress records may omit
 analyses or populate the application database with synthetic analysis results.
 Tests create temporary synthetic analyses only in the isolated test database.
 
-### Analysis engine (service only)
+### Analysis POST endpoints
 
 The internal `analyzeLogs(logs)` service in `src/services/analysisEngine.js` analyzes
-a batch and saves its findings. No analysis POST endpoint is implemented in this
-wave. The caller must establish the MongoDB connection before invoking it.
+a batch and saves its findings. Both v1 analysis POST endpoints use this service.
+Internal callers must establish the MongoDB connection before invoking it.
+
+`POST /api/logs/analyze` accepts `{ "logs": [ ... ] }`. Each entry follows the
+`POST /api/logs` field contract; client-supplied IDs or extra fields are rejected.
+Raw logs are analyzed without automatically inserting them into `logs` or the
+quarantine collection. `POST /api/logs/stored/analyze` accepts
+`{ "ids": ["24-character hexadecimal ObjectId", "..."] }` instead. Stored IDs
+are case-insensitive, must be unique, and are fetched in the submitted order.
+If any requested log is missing, the entire submission returns 404 before Gemini
+is called. No partial stored-log batches are analyzed.
+
+Both endpoints require 1–500 entries, UTF-8 `application/json`, no query parameters,
+and no unknown envelope fields. JSON bodies are capped at 1 MiB; the engine's
+256000-byte redacted batch limit and configured chunk limits also apply.
+Invalid requests return 400, unsupported media/encoding 415, and oversize input
+413. Invalid analysis submissions are not ingested or quarantined.
+
+Success returns HTTP **201** only after the completed report is saved:
+`{ "id": "...", "status": "Completed", "report": { ... } }`. Retrieve it later
+with `GET /api/analysis/:id`. Failures use `{ error, code, analysisId? }`:
+
+| Failure | HTTP status |
+| --- | --- |
+| Missing/invalid Gemini configuration | 503 |
+| Provider authentication, rate limit, or persistence failure | 503 |
+| Provider malformed response, safety refusal, or upstream failure | 502 |
+| Provider, aggregate analysis, or HTTP request deadline | 504 |
+| Unexpected engine failure | 500 |
+
+When available, `analysisId` identifies a persisted failed/in-flight record.
+`ANALYSIS_HTTP_TIMEOUT_MS` defaults to 130000 (maximum 660000) and bounds the
+request independently of provider timeouts. On expiry, the API promptly returns
+504 and aborts provider work. Client disconnects also abort the work. Cancellation
+prevents additional chunks or successful responses after cancellation. Failure
+persistence has its own bounded database write and may finish after the 504.
+Database failures or process crashes can still leave unfinished/uncertain records.
+
+Set client/reverse-proxy deadlines above the API's intended deadline, or reduce
+`ANALYSIS_HTTP_TIMEOUT_MS` to fit your deployment. A shorter client deadline cancels
+the request rather than creating a durable background job. These endpoints have no
+automatic retries, idempotency, or resumable jobs; retrying can create another
+analysis and billed provider call. Tests use a Gemini stub and make no paid calls.
+
+### Analysis engine configuration
 
 Set `GEMINI_API_KEY` and `GEMINI_MODEL` in your local `.env`. Existing local values
 are preserved; missing entries are placeholders until configured. Choose a Gemini
@@ -252,6 +295,13 @@ Existing seeded application logs remain untouched. Stop test services with
 For tests outside Docker, supply `MONGODB_URI` and, for E2E, `API_BASE_URL`, then
 run `npm run test:integration` or `npm run test:e2e`. The database name must end
 in `_test`, and E2E must target an API using that same test database.
+
+Analysis POST E2E tests launch a real test API process wired to a local Gemini stub;
+this test-only bootstrap does not add a provider URL override to production.
+Run `npm run test:coverage` for all `src` modules. Coverage thresholds protect the
+new request validation, deadline middleware, and stored-log submission service at
+100%, plus an overall baseline. `src/server.js` startup/shutdown runs in child
+process integration/E2E checks and is not counted by Jest's unit coverage.
 
 ### Configuration and diagnostics
 

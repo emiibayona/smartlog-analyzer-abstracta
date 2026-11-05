@@ -34,7 +34,7 @@ test('invalid mode in an actual environment file does not crash the API', { time
         const script = `
           const { analyzeLogs } = require('./src/services/analysisEngine');
           analyzeLogs([]).then(() => process.exit(2)).catch(error => {
-            if (error.message !== 'Invalid ANALYSIS_MODE') process.exit(3);
+            if (error.code !== 'INVALID_CONFIGURATION') process.exit(3);
             require('./src/server');
           });
         `;

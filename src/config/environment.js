@@ -33,6 +33,7 @@ function loadEnvironment(env = process.env) {
     port: positiveInteger(env.PORT, 3000, 65535, 'PORT'),
     queryTimeoutMs: positiveInteger(env.QUERY_TIMEOUT_MS, 5000, 60000, 'QUERY_TIMEOUT_MS'),
     healthTimeoutMs: positiveInteger(env.HEALTH_TIMEOUT_MS, 2000, 10000, 'HEALTH_TIMEOUT_MS'),
+    analysisHttpTimeoutMs: positiveInteger(env.ANALYSIS_HTTP_TIMEOUT_MS, 130000, 660000, 'ANALYSIS_HTTP_TIMEOUT_MS'),
     allowedOrigins: corsOrigins(env.CORS_ALLOWED_ORIGINS),
   };
 }
