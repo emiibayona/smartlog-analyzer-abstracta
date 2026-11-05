@@ -50,6 +50,13 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 - [GET] `/api/analysis/` - Retrieve List of analysis, with filters [date, microservice, message, status], pagination.
 - [GET] `/api/analysis/:id` - Retrieve the analysis by {id}
 - [GET] `/api/health` - Health check
+  - Live MongoDB ping with a bounded deadline; returns 200 when ready and 503 otherwise.
+
+## Runtime safeguards
+- Validate environment configuration before connecting or listening.
+- Apply client/server query deadlines and indexes for common log filters and newest-first sorting.
+- Generate request IDs and structured operational logs without raw credentials, headers, or log payloads.
+- Run integration/E2E tests against a separate test API and ephemeral MongoDB instance on an isolated Docker network.
 
 ## POST
 - [POST] `/api/logs` - Receive a log to insert

@@ -10,10 +10,12 @@ services:
       PORT: "3000"
       CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS-http://localhost:3000}"
       MONGODB_URI: mongodb://mongodb:27017/smartlog
+      QUERY_TIMEOUT_MS: "${QUERY_TIMEOUT_MS:-5000}"
+      HEALTH_TIMEOUT_MS: "${HEALTH_TIMEOUT_MS:-2000}"
     ports:
       - "127.0.0.1:${API_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -36,19 +38,56 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  mongodb-test:
+    profiles: [test]
+    image: mongo:8.0
+    tmpfs:
+      - /data/db
+      - /data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [test]
+
+  api-test:
+    profiles: [test]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    environment:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://mongodb-test:27017/smartlog_test
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [test]
+
   tests:
     profiles: [test]
     build:
       context: .
       dockerfile: Dockerfile.test
     environment:
-      MONGODB_URI: mongodb://mongodb:27017/smartlog
-      API_BASE_URL: http://api:3000
+      MONGODB_URI: mongodb://mongodb-test:27017/smartlog_test
+      API_BASE_URL: http://api-test:3000
     depends_on:
-      api:
+      api-test:
         condition: service_healthy
-      mongodb:
+      mongodb-test:
         condition: service_healthy
+    networks: [test]
+
+networks:
+  test:
+    internal: true
 
 volumes:
   mongodb_data:

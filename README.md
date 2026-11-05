@@ -35,7 +35,9 @@ docker compose ps
 docker compose logs -f api
 ```
 
-Check the API at `http://localhost:3000/api`. `/api/health` is not implemented yet.
+Check the API at `http://localhost:3000/api`. `/api/health` returns
+`{ "status": "ok" }` when MongoDB responds, or HTTP 503 when unavailable.
+Docker readiness uses this live database check.
 
 Optionally copy `.env.example` to `.env` using your editor and set `API_PORT` to
 change the host port. Compose reads `.env` automatically. The database hostname
@@ -90,19 +92,37 @@ Counts and page data are separate reads, so concurrent writes may change totals.
 E2E tests through Docker (the test image includes development dependencies):
 
 ```sh
-docker compose --profile test build tests
+docker compose --profile test build api-test tests
 docker compose --profile test run --rm tests
 ```
 
-After application changes, rebuild the API first with
-`docker compose up --build -d --wait api`.
+After application changes, rebuild both test images with the build command above.
+Tests start a separate `api-test` and ephemeral `mongodb-test` on an internal
+Docker network, without published ports or access to the application's data volume.
 Database integration and E2E suites use Node's test runner to avoid a MongoDB
 driver handshake issue in Jest's sandbox. Integration tests use the application
 and MongoDB; E2E tests send HTTP requests
-to the running API container. Both insert uniquely named synthetic fixtures and
-remove only their own IDs afterward. Existing seeded logs remain untouched.
+to the running test API container. Both insert uniquely named synthetic fixtures
+and remove only their own IDs afterward. Seed tests use a temporary collection.
+Existing seeded application logs remain untouched. Stop test services with
+`docker compose --profile test stop api-test mongodb-test` when finished.
 For tests outside Docker, supply `MONGODB_URI` and, for E2E, `API_BASE_URL`, then
-run `npm run test:integration` or `npm run test:e2e`.
+run `npm run test:integration` or `npm run test:e2e`. The database name must end
+in `_test`, and E2E must target an API using that same test database.
+
+### Configuration and diagnostics
+
+Startup validates MongoDB URI syntax, port (1–65535), CORS origin syntax, and
+database deadlines. `QUERY_TIMEOUT_MS` defaults to 5000 (maximum 60000);
+`HEALTH_TIMEOUT_MS` defaults to 2000 (maximum 10000). Queries have client and
+server time limits; database timeouts return a generic JSON HTTP 503.
+Indexes cover newest-first ordering and common microservice/level filters.
+Literal substring message searches can still scan data; deadlines bound their work.
+
+Requests receive a generated `X-Request-Id`. JSON logs include that ID, matched
+route, method, status, and duration. Error logs record safe error names and codes,
+including underlying cause codes, rather than raw error messages, request URLs,
+headers, or payloads. Configuration and database credentials are never logged.
 
 ### Seed demo logs
 

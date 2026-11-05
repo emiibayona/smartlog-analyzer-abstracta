@@ -1,0 +1,33 @@
+Task: Implement approved backend review improvements using nodejs-backend-patterns.
+
+Added isolated api-test/mongodb-test services on an internal Docker network;
+test MongoDB uses ephemeral tmpfs rather than the application's persistent volume.
+Database test helpers require a _test database and clean up only their own records.
+Added real seed rerun tests preserving unrelated and edited records.
+
+Added /api/health with bounded MongoDB ping and 503 on unavailability; Compose
+readiness now checks that endpoint. Added validated environment configuration
+for MongoDB URI, port, CORS origins, and configurable query/readiness deadlines.
+Log page/count queries use server/client deadlines and return generic 503 on
+known timeout errors. Added indexes for newest-first and common filtered sorting.
+Startup creates indexes before listening and handles disconnect on shutdown.
+
+Added generated request IDs and structured JSON request/error logs. Raw errors,
+URLs, query values, headers, payloads, and database credentials are excluded;
+safe error names/codes and cause identifiers support diagnostics.
+Updated README, environment example, and architecture. Offset pagination retained
+as approved; cursor pagination remains a future contract change.
+
+Verification:
+- 68 Jest unit/HTTP tests passed.
+- 5 database integration tests passed, including seed idempotency/preservation.
+- E2E suite passed: five subtests plus parent (6 Node test results).
+- Compose config validation and all API/test image builds passed.
+- Stopping only mongodb-test caused api-test /api/health to return 503.
+- Restarting mongodb-test restored healthy status without restarting the API.
+- Localhost /api/health and filtered /api/logs returned 200; inventory demo count 6.
+- git diff --check passed.
+- Production dependency install reported zero vulnerabilities; the existing
+  development dependency audit remains at 19 findings (3 low, 16 moderate).
+
+Test services stopped after verification; application API and MongoDB left running.

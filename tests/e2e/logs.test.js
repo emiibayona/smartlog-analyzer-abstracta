@@ -13,6 +13,12 @@ test('GET /api/logs through the running API and MongoDB', async (t) => {
     return { status: response.status, body: await response.json() };
   }
   try {
+    await t.test('readiness reports the isolated database as healthy', async () => {
+      const response = await fetch(new URL('/api/health', baseUrl), { signal: AbortSignal.timeout(5000) });
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { status: 'ok' });
+      assert.ok(response.headers.get('x-request-id'));
+    });
     await t.test('combined filters return only matching logs', async () => {
       const response = await get({ microservice: fixture.microservice, date: '2026-11-04', level: 'error', message: '[a].*' });
       assert.equal(response.status, 200);
@@ -40,7 +46,7 @@ test('GET /api/logs through the running API and MongoDB', async (t) => {
         assert.equal(response.status, 400);
         assert.equal(typeof response.body.error, 'string');
       }
-      const response = await fetch(new URL('/api/logs?level=info&level=error', baseUrl));
+      const response = await fetch(new URL('/api/logs?level=info&level=error', baseUrl), { signal: AbortSignal.timeout(10000) });
       assert.equal(response.status, 400);
     });
   } finally { await fixture.cleanup(); }

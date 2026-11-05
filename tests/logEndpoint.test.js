@@ -29,3 +29,13 @@ test('database failures use the centralized error response', async () => {
     expect(response.body).toEqual({ error: 'Internal server error' });
   } finally { consoleSpy.mockRestore(); }
 });
+
+test.each([{ code: 50 }, { name: 'MongoOperationTimeoutError' }, { name: 'MongoServerSelectionError' }])('database timeouts return 503: %j', async (details) => {
+  const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    listLogs.mockRejectedValue(Object.assign(new Error('private'), details));
+    const response = await request(app).get('/api/logs');
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({ error: 'Database temporarily unavailable' });
+  } finally { spy.mockRestore(); }
+});

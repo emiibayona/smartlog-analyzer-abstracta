@@ -5,6 +5,10 @@ const Log = require('../../db/models/log');
 async function createFixtures(prefix) {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required for database tests');
   await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  if (!mongoose.connection.name.endsWith('_test')) {
+    await mongoose.disconnect();
+    throw new Error('Database tests require a database name ending in _test');
+  }
   const microservice = `${prefix}-${randomUUID()}`;
   const ids = [1, 2, 3, 4].map(() => new mongoose.Types.ObjectId());
   try {
@@ -15,8 +19,8 @@ async function createFixtures(prefix) {
       { _id: ids[3], microservice, date: '2026-11-05T00:00:00Z', level: 'warn', message: 'Recovered' },
     ]);
   } catch (error) {
-    await Log.deleteMany({ _id: { $in: ids } });
-    await mongoose.disconnect();
+    try { await Log.deleteMany({ _id: { $in: ids } }); }
+    finally { await mongoose.disconnect(); }
     throw error;
   }
   return {

@@ -5,6 +5,7 @@ const app = require('../../src/app');
 const { listLogs } = require('../../src/services/logService');
 const { parseLogQuery } = require('../../src/utils/logQuery');
 const { createFixtures } = require('../helpers/logFixtures');
+const Log = require('../../db/models/log');
 
 let fixture;
 before(async () => { fixture = await createFixtures('integration'); });
@@ -21,4 +22,16 @@ test('HTTP endpoint includes day boundaries and excludes the next day', async ()
   const response = await request(app).get('/api/logs').query({ microservice: fixture.microservice, date: '2026-11-04' });
   assert.equal(response.status, 200);
   assert.equal(response.body.pagination.total, 3);
+});
+
+test('readiness pings the real database', async () => {
+  const response = await request(app).get('/api/health');
+  assert.equal(response.status, 200);
+});
+
+test('query indexes exist for default and common filtered ordering', async () => {
+  await Log.createIndexes();
+  const indexes = await Log.collection.indexes();
+  assert.ok(indexes.some(({ key }) => JSON.stringify(key) === JSON.stringify({ date: -1, _id: -1 })));
+  assert.ok(indexes.some(({ key }) => JSON.stringify(key) === JSON.stringify({ microservice: 1, level: 1, date: -1, _id: -1 })));
 });

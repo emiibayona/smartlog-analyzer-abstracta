@@ -2,13 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const apiRoutes = require('./routes/apiRoutes');
 const errorHandler = require('./middlewares/errorHandler');
+const requestLogger = require('./middlewares/requestLogger');
+const { corsOrigins } = require('./config/environment');
 
 const app = express();
 app.disable('x-powered-by');
-const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const allowedOrigins = corsOrigins(process.env.CORS_ALLOWED_ORIGINS);
+app.use(requestLogger);
 
 app.use(cors({
   origin: (origin, callback) => {

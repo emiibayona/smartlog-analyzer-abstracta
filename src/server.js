@@ -1,29 +1,36 @@
-const app = require('./app');
 const mongoose = require('mongoose');
-
-const port = Number(process.env.PORT || 3000);
-const host = process.env.HOST || '0.0.0.0';
+const { loadEnvironment } = require('./config/environment');
+const { log, errorDetails } = require('./utils/logger');
 
 async function start() {
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is required');
-  await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  const config = loadEnvironment();
+  const app = require('./app');
+  const { port, host } = config;
+  app.locals.queryTimeoutMs = config.queryTimeoutMs;
+  app.locals.healthTimeoutMs = config.healthTimeoutMs;
+  await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false });
+  await require('../db/models/log').createIndexes();
   const server = app.listen(port, host, () => {
-    console.log(`API listening on ${host}:${port}`);
+    log('info', 'server_started', { host, port });
   });
-  server.on('error', () => {
-    console.error('Unable to start API');
+  server.on('error', (error) => {
+    log('error', 'server_failed', { error: errorDetails(error) });
     mongoose.disconnect().finally(() => process.exit(1));
   });
   for (const signal of ['SIGTERM', 'SIGINT']) {
     process.once(signal, () => {
       const timeout = setTimeout(() => process.exit(1), 10000);
       timeout.unref();
-      server.close(() => mongoose.disconnect().then(() => process.exit(0)));
+      log('info', 'server_stopping', { signal });
+      server.close(() => mongoose.disconnect().then(() => process.exit(0)).catch((error) => {
+        log('error', 'shutdown_failed', { error: errorDetails(error) });
+        process.exit(1);
+      }));
     });
   }
 }
 
-start().catch(() => {
-  console.error('Unable to start API. Check MongoDB configuration and availability.');
+start().catch((error) => {
+  log('error', 'startup_failed', { error: errorDetails(error) });
   mongoose.disconnect().finally(() => process.exit(1));
 });
