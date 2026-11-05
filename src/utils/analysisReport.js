@@ -1,15 +1,18 @@
 const { AnalysisError } = require('./analysisErrors');
 
+const findingCategories = Object.freeze(['latency', 'availability', 'data-integrity', 'capacity', 'configuration', 'other']);
+
 const findingSchema = {
   type: 'object', additionalProperties: false,
   properties: {
     title: { type: 'string', minLength: 1, maxLength: 160 },
+    category: { type: 'string', enum: findingCategories },
     severity: { type: 'string', enum: ['info', 'warning', 'critical'] },
     description: { type: 'string', minLength: 1, maxLength: 2000 },
     recommendation: { type: 'string', minLength: 1, maxLength: 2000 },
     evidenceLogIds: { type: 'array', minItems: 1, maxItems: 500, items: { type: 'string' } },
   },
-  required: ['title', 'severity', 'description', 'recommendation', 'evidenceLogIds'],
+  required: ['title', 'category', 'severity', 'description', 'recommendation', 'evidenceLogIds'],
 };
 const reportSchema = {
   type: 'object', additionalProperties: false,
@@ -47,8 +50,9 @@ function validateReport(report, allowedIds) {
   for (const key of ['patterns', 'commonIssues', 'insights']) {
     if (!Array.isArray(report[key]) || report[key].length > 10) invalid();
     result[key] = report[key].map((finding) => {
-      if (!exactKeys(finding, ['title', 'severity', 'description', 'recommendation', 'evidenceLogIds']) ||
+      if (!exactKeys(finding, ['title', 'category', 'severity', 'description', 'recommendation', 'evidenceLogIds']) ||
           !text(finding.title, 160) || !text(finding.description, 2000) || !text(finding.recommendation, 2000) ||
+          !findingCategories.includes(finding.category) ||
           !['info', 'warning', 'critical'].includes(finding.severity) ||
           !Array.isArray(finding.evidenceLogIds) || !finding.evidenceLogIds.length || finding.evidenceLogIds.length > 500 ||
           finding.evidenceLogIds.some((id) => typeof id !== 'string' || !allowed.has(id)) ||
@@ -59,4 +63,4 @@ function validateReport(report, allowedIds) {
   return result;
 }
 
-module.exports = { reportSchema, validateReport, redactSecrets };
+module.exports = { reportSchema, validateReport, redactSecrets, findingCategories };

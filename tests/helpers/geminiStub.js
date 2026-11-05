@@ -12,6 +12,8 @@ async function startGeminiStub(mode = 'valid') {
     const input = JSON.parse(request.contents[0].parts[0].text);
     const ids = input.phase === 'chunk' ? input.logs.map((entry) => entry.id) : input.evidenceLogIds;
     const finding = report(ids);
+    if (mode === 'missing-category') delete finding.patterns[0].category;
+    if (mode === 'invalid-category') finding.patterns[0].category = 'unsupported';
     if (mode === 'timeout') {
       const timer = setTimeout(() => { timers.delete(timer); res.end('{}'); }, 1000);
       timers.add(timer);

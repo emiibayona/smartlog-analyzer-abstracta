@@ -11,7 +11,7 @@ function inputLogs() {
 function report(ids = ['input-1', 'input-2']) {
   return {
     summary: 'Repeated inventory lock timeouts correlate with restock failures.',
-    patterns: [{ title: 'Inventory lock timeouts', severity: 'warning', description: 'Lock timeouts recur in the provided evidence.', recommendation: 'Inspect lock contention and retry metrics.', evidenceLogIds: ids }],
+    patterns: [{ title: 'Inventory lock timeouts', category: 'latency', severity: 'warning', description: 'Lock timeouts recur in the provided evidence.', recommendation: 'Inspect lock contention and retry metrics.', evidenceLogIds: ids }],
     commonIssues: [], insights: [],
   };
 }

@@ -30,3 +30,22 @@ test('analysis query indexes are installed', async () => {
   const indexes = await Analysis.collection.indexes();
   assert.ok(indexes.some(({ key }) => JSON.stringify(key) === JSON.stringify({ microservice: 1, status: 1, date: -1, _id: -1 })));
 });
+
+test('historical reports without categories remain readable and are not rewritten', async () => {
+  const legacyReport = {
+    summary: 'Historical report',
+    patterns: [{ title: 'Legacy timeout', severity: 'warning', description: 'Historical evidence', recommendation: 'Inspect metrics', evidenceLogIds: ['input-1'] }],
+    commonIssues: [], insights: [],
+  };
+  const record = await Analysis.create({ microservice: fixture.microservice, date: new Date('2026-11-04T12:00:00Z'), status: 'Completed',
+    report: legacyReport, result: JSON.stringify(legacyReport), message: legacyReport.summary, promptVersion: 'warehouse-logs-v3' });
+  fixture.ids.push(record._id);
+  const response = await request(app).get(`/api/analysis/${record._id}`);
+  assert.equal(response.status, 200);
+  assert.deepEqual(response.body.report, legacyReport);
+  assert.equal(response.body.report.patterns[0].category, undefined);
+  const saved = await Analysis.findById(record._id);
+  assert.deepEqual(saved.report, legacyReport);
+  assert.equal(saved.result, JSON.stringify(legacyReport));
+  assert.equal(saved.promptVersion, 'warehouse-logs-v3');
+});

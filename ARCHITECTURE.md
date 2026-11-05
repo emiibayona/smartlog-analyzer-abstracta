@@ -49,6 +49,7 @@ safety blocks, wrong output formats, and timeouts without persisting partial suc
     - `status` - [Pending, In progress, Completed, Failed]
     - Engine metadata: microservices, logIds, inputReferences, logCount, chunkCount, model, promptVersion, levelCounts, completedAt, errorCode.
     - `report` - Validated structured summary, patterns, commonIssues, insights, each finding referencing input evidence IDs. `result` retains its JSON-string representation.
+    - Every new finding requires `category`: latency, availability, data-integrity, capacity, configuration, or other. Category describes the problem type; severity describes impact. Missing/invalid categories fail report validation. Historical reports remain unchanged/readable.
 
 ## Diagram
 [MICROSERVICES | FRONTEND] <-> [API] <-> [MIDDLEWARE] <->   [CONTROLLER] <-> [SERVICES] <-> [LLM]

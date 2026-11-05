@@ -1,0 +1,19 @@
+Task: Implement challenge-review point 5 only, ready for a separate user commit.
+
+Added required category to every new finding in patterns/commonIssues/insights.
+Taxonomy: latency, availability, data-integrity, capacity, configuration, other.
+Category describes problem type independently of severity. Gemini receives enum
+schema plus definitions, and local validation rejects absent/invalid categories
+without silently inventing a fallback. Chunk and final synthesis use the same
+contract; invalid output produces Failed/INVALID_RESPONSE and HTTP 502.
+Updated prompt version to warehouse-logs-v4, synthetic provider fixtures, and docs.
+Categories persist in both report and JSON-string result and are returned by GET.
+Historical reports remain readable without changes/backfilling; no migration needed.
+
+Validation: 330 unit/HTTP tests, 50 integration results, and 30 E2E results passed.
+Tests cover all six categories across all three finding sections, wrong/missing
+types, empty findings, invalid final synthesis, persistence/HTTP validation, and
+historical report compatibility. Coverage thresholds, Compose configuration,
+image builds, startup readiness, and git diff --check passed.
+No live Gemini calls or application data rewrites. Application rebuilt and healthy;
+isolated test services stopped. Changes intentionally uncommitted for point 5.

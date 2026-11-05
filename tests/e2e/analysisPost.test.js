@@ -40,6 +40,8 @@ test('analysis POST endpoints work end to end with safe timeouts', { timeout: 90
         const record = await response.json();
         assert.equal(record.provider, 'gemini');
         assert.deepEqual(record.report, result.body.report);
+        assert.equal(record.report.patterns[0].category, 'latency');
+        assert.equal(JSON.parse(record.result).patterns[0].category, 'latency');
       }
     });
     await t.test('minimum and maximum batch counts and multi-chunk synthesis succeed', async () => {
@@ -68,7 +70,7 @@ test('analysis POST endpoints work end to end with safe timeouts', { timeout: 90
       assert.equal(tooLarge.status, 413);
     });
     await t.test('provider failures and timeout return safe errors with persisted Failed records', async () => {
-      for (const [mode, status, code] of [['wrong-format', 502, 'INVALID_RESPONSE'], ['refusal', 502, 'PROVIDER_REFUSAL'], ['http-auth', 503, 'PROVIDER_AUTH'], ['http-rate-limit', 503, 'PROVIDER_RATE_LIMIT'], ['http-error', 502, 'PROVIDER_ERROR'], ['timeout', 504, 'PROVIDER_TIMEOUT']]) {
+      for (const [mode, status, code] of [['wrong-format', 502, 'INVALID_RESPONSE'], ['missing-category', 502, 'INVALID_RESPONSE'], ['invalid-category', 502, 'INVALID_RESPONSE'], ['refusal', 502, 'PROVIDER_REFUSAL'], ['http-auth', 503, 'PROVIDER_AUTH'], ['http-rate-limit', 503, 'PROVIDER_RATE_LIMIT'], ['http-error', 502, 'PROVIDER_ERROR'], ['timeout', 504, 'PROVIDER_TIMEOUT']]) {
         stub.setMode(mode);
         const result = await post('/api/logs/analyze', { logs: inputLogs() });
         assert.equal(result.status, status);

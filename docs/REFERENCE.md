@@ -174,11 +174,37 @@ this is a baseline filter, not a guarantee that arbitrary sensitive data is remo
 `ANALYSIS_CHUNK_BYTES` defaults to 24000 (range 1024–64000). Whole log records
 are preserved, with at most 20 chunks. A record that cannot fit a chunk is rejected
 rather than silently truncated. Multiple chunks receive a final synthesis pass
-to correlate patterns and common issues. Each finding includes a title, severity,
+to correlate patterns and common issues. Each finding includes a title, category, severity,
 description, recommendation, and evidence IDs validated against the submitted
 batch. Reports contain `summary`, `patterns`, `commonIssues`, and `insights`.
 Empty finding arrays are valid when evidence is insufficient. Counts by level
 are calculated from the input, not estimated by the model.
+
+### Problem categories
+
+Every finding in `patterns`, `commonIssues`, and `insights` requires exactly one
+category, independently of its severity (`info`, `warning`, or `critical`):
+
+| Category | Observed problem type |
+| --- | --- |
+| `latency` | Slow operations, timeouts, or excessive duration |
+| `availability` | Unreachable services or failing dependencies |
+| `data-integrity` | Inconsistent counts, missing/corrupt data, or incorrect state |
+| `capacity` | Resource saturation, insufficient stock, or storage limits |
+| `configuration` | Invalid settings or deployment configuration |
+| `other` | Evidence does not support a more specific category |
+
+Gemini receives this taxonomy in the JSON Schema and system instructions for
+both chunk analysis and final synthesis. Missing, unknown, or incorrectly typed
+categories invalidate the response; the engine records `Failed` with
+`INVALID_RESPONSE`, and analysis POST endpoints return HTTP 502. They are not
+silently defaulted to `other`. Empty finding arrays remain valid.
+
+New reports use prompt version `warehouse-logs-v4` and persist category in both
+the structured `report` and JSON-string `result`. Existing reports without a
+category remain readable unchanged; no historical classification is invented.
+No collection/index migration is needed because these report fields are already
+stored as a structured report and JSON text.
 
 `ANALYSIS_REQUEST_TIMEOUT_MS` defaults to 30000 (maximum 120000).
 `ANALYSIS_TOTAL_TIMEOUT_MS` defaults to 120000 (maximum 600000), bounding the

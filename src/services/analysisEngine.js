@@ -23,7 +23,7 @@ async function analyzeLogs(logs, options = {}) {
     microservices: prepared.microservices, date: new Date(), status: 'Pending',
     logIds: prepared.logIds, inputReferences: prepared.references,
     logCount: prepared.input.length, chunkCount: prepared.chunks.length,
-    provider: 'gemini', model: config.model, mode: config.mode, promptVersion: 'warehouse-logs-v3',
+    provider: 'gemini', model: config.model, mode: config.mode, promptVersion: 'warehouse-logs-v4',
     requestId: options.requestId,
   });
   const deadline = Date.now() + config.totalTimeoutMs;

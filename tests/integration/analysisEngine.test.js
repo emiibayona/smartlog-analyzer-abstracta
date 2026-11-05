@@ -12,7 +12,7 @@ test('analysis engine integrates the Gemini HTTP contract and real MongoDB', asy
   const ids = [];
   try {
     assert.ok(mongoose.connection.name.endsWith('_test'));
-    for (const [mode, expected] of [['valid', null], ['multipart', null], ['wrong-format', 'INVALID_RESPONSE'], ['invalid-json', 'INVALID_RESPONSE'], ['malformed-envelope', 'INVALID_RESPONSE'], ['oversized-response', 'INVALID_RESPONSE'], ['refusal', 'PROVIDER_REFUSAL'], ['candidate-block', 'PROVIDER_REFUSAL'], ['empty-candidates', 'INVALID_RESPONSE'], ['multiple-candidates', 'INVALID_RESPONSE'], ['incomplete', 'INVALID_RESPONSE'], ['timeout', 'PROVIDER_TIMEOUT'], ['http-error', 'PROVIDER_ERROR'], ['http-auth', 'PROVIDER_AUTH'], ['http-rate-limit', 'PROVIDER_RATE_LIMIT']]) {
+    for (const [mode, expected] of [['valid', null], ['multipart', null], ['missing-category', 'INVALID_RESPONSE'], ['invalid-category', 'INVALID_RESPONSE'], ['wrong-format', 'INVALID_RESPONSE'], ['invalid-json', 'INVALID_RESPONSE'], ['malformed-envelope', 'INVALID_RESPONSE'], ['oversized-response', 'INVALID_RESPONSE'], ['refusal', 'PROVIDER_REFUSAL'], ['candidate-block', 'PROVIDER_REFUSAL'], ['empty-candidates', 'INVALID_RESPONSE'], ['multiple-candidates', 'INVALID_RESPONSE'], ['incomplete', 'INVALID_RESPONSE'], ['timeout', 'PROVIDER_TIMEOUT'], ['http-error', 'PROVIDER_ERROR'], ['http-auth', 'PROVIDER_AUTH'], ['http-rate-limit', 'PROVIDER_RATE_LIMIT']]) {
       await t.test(`${mode} response persists the correct outcome`, async () => {
         const stub = await startGeminiStub(mode);
         try {
@@ -31,6 +31,8 @@ test('analysis engine integrates the Gemini HTTP contract and real MongoDB', asy
             assert.equal(stored.provider, 'gemini');
             assert.equal(stored.mode, 'synthesis');
             assert.equal(stored.logCount, 2);
+            assert.equal(stored.report.patterns[0].category, 'latency');
+            assert.equal(stored.promptVersion, 'warehouse-logs-v4');
           } else {
             let failure;
             try { await analyzeLogs(inputLogs(), { config: testConfig, provider }); }
@@ -65,6 +67,7 @@ test('analysis engine integrates the Gemini HTTP contract and real MongoDB', asy
         assert.equal(stub.requests.length, 3);
         assert.equal((await Analysis.findById(result.id)).chunkCount, 2);
         assert.deepEqual(result.report.patterns[0].evidenceLogIds, ['input-1', 'input-2']);
+        assert.equal(result.report.patterns[0].category, 'latency');
       } finally { await stub.close(); }
     });
   } finally {

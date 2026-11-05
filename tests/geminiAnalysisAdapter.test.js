@@ -17,6 +17,8 @@ test('uses Gemini model URL, key header and JSON Schema without tools', async ()
   const body = JSON.parse(options.body);
   expect(body.generationConfig.responseMimeType).toBe('application/json');
   expect(body.generationConfig.responseJsonSchema.required).toContain('summary');
+  expect(body.generationConfig.responseJsonSchema.properties.patterns.items.required).toContain('category');
+  expect(body.systemInstruction.parts[0].text).toContain('distinct from severity');
   expect(body).not.toHaveProperty('tools');
   expect(body).not.toHaveProperty('store');
 });

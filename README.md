@@ -2,6 +2,8 @@
 
 A Node.js/Express API that stores microservice logs in MongoDB and uses Google Gemini to find patterns and generate insights.
 
+New analysis findings include a problem category, severity, evidence, and an action recommendation.
+
 ## Requirements
 
 Docker with a current Docker Compose version. Use Linux containers on Windows, Linux, or macOS. No local Node.js or MongoDB installation is needed.
