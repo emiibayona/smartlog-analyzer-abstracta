@@ -26,7 +26,7 @@ From the repository root:
 docker compose up
 ```
 
-This builds the current API code and starts the API and MongoDB. Logs appear in the terminal.
+This builds the current API code, starts MongoDB, applies pending database migrations, and starts the API. Logs appear in the terminal.
 
 - API: [http://localhost:3000/api](http://localhost:3000/api)
 - Readiness: [http://localhost:3000/api/health](http://localhost:3000/api/health)
@@ -64,6 +64,12 @@ docker compose --profile test run --build --rm --no-deps tests npm test
 ```
 
 ## Demo data
+
+Migrations run automatically at startup. To run them explicitly (safe to rerun):
+
+```sh
+docker compose exec -T api npm run migrate
+```
 
 With the app running, insert 24 sample logs (safe to rerun):
 

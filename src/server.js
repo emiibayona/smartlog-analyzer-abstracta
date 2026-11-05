@@ -9,10 +9,8 @@ async function start() {
   app.locals.queryTimeoutMs = config.queryTimeoutMs;
   app.locals.healthTimeoutMs = config.healthTimeoutMs;
   app.locals.analysisHttpTimeoutMs = config.analysisHttpTimeoutMs;
-  await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false });
-  await require('../db/models/log').createIndexes();
-  await require('../db/models/analysis').Analysis.createIndexes();
-  await require('../db/models/rejectedLog').createIndexes();
+  await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false, autoCreate: false, autoIndex: false });
+  await require('../db/migrate').runMigrations(mongoose.connection.db);
   const server = app.listen(port, host, () => {
     log('info', 'server_started', { host, port });
   });

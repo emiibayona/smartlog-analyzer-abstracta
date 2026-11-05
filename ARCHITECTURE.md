@@ -7,6 +7,11 @@
 ## Framework
     Using Nodejs and Expressjs we can achieve a powerfull, solid and flexible backend to handle files like Logs.
 ## DB
+Versioned forward-only migrations live in `db/migrations/`; `db/migrate.js` applies
+pending versions and records completion in `schema_migrations`. Startup runs them
+before accepting requests, replacing implicit Mongoose index creation. The initial
+version establishes collections and indexes without removing existing records or
+indexes. Repeated application is safe; failed versions are not marked complete.
     At first, i decided go with MySQL, since it's my common DB. After that, i moved to MongoDB (even i'm not fully familiarized with it) since i though is the best way to handle logs from multiple microservices.
     - 
 ## Testing

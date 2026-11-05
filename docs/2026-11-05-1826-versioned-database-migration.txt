@@ -1,0 +1,20 @@
+Task: Implement only challenge-review point 1; keep points 2 and 5 for separate commits.
+
+Added db/migrate.js and immutable initial migration snapshot with application
+collections and query indexes. Record successful versions/appliedAt in
+schema_migrations; skip completed versions and fail without recording incomplete
+steps. DDL is forward-only and repeatable; existing documents/custom indexes are
+preserved. API startup now runs migrations rather than implicit Mongoose DDL.
+Added npm run migrate, concise README command, architecture notes and migration guide.
+
+Validation: 260 unit/HTTP tests, 41 integration results, and 30 E2E results passed.
+Real MongoDB cases cover fresh setup, index/model parity, safe reruns, preservation
+of records and custom indexes, partial initialization, failed version retry.
+Coverage thresholds, Compose config validation, image builds and readiness passed.
+Application startup applied the initial version; two explicit Docker migration
+runs reported 0 applied / 1 already applied. Before/after application collection
+counts matched. git diff --check passed. No live Gemini calls or volume deletion.
+
+Application remains healthy and running; isolated test services stopped.
+Changes intentionally left uncommitted for the user's point-1 commit.
+Aggregation (point 2) and explicit problem categories (point 5) are untouched.
