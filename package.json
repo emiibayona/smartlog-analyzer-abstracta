@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "aggregate": "node --env-file-if-exists=.env db/aggregateLogs.js",
     "migrate": "node --env-file-if-exists=.env db/migrate.js",
     "seed": "node --env-file-if-exists=.env db/seed.js",
     "start": "node --env-file-if-exists=.env src/server.js",

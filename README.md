@@ -77,7 +77,16 @@ With the app running, insert 24 sample logs (safe to rerun):
 docker compose exec -T api npm run seed
 ```
 
+Count logs by microservice and level (read-only):
+
+```sh
+docker compose exec -T api npm run aggregate
+```
+
+Optional date range: append `-- --from 2026-11-04 --to 2026-11-04`.
+
 ## Documentation
 
 - [API and configuration reference](docs/REFERENCE.md)
+- [Aggregation command and filters](db/AGGREGATION.md)
 - [Architecture and v2.0 TODOs](ARCHITECTURE.md)

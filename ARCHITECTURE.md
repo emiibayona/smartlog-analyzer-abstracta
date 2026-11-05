@@ -7,6 +7,10 @@
 ## Framework
     Using Nodejs and Expressjs we can achieve a powerfull, solid and flexible backend to handle files like Logs.
 ## DB
+The read-only `npm run aggregate` command uses MongoDB `$match`, `$group`,
+`$project`, and `$sort` to count logs by microservice and level. Optional service,
+level, and inclusive UTC calendar-day bounds filter the input. Queries have client
+and server time limits; no additional API endpoint or schema change is required.
 Versioned forward-only migrations live in `db/migrations/`; `db/migrate.js` applies
 pending versions and records completion in `schema_migrations`. Startup runs them
 before accepting requests, replacing implicit Mongoose index creation. The initial

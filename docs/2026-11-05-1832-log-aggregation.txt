@@ -1,0 +1,21 @@
+Task: Implement only challenge-review point 2, ready for a separate user commit.
+
+Added a read-only MongoDB aggregation service and npm run aggregate CLI. Pipeline
+uses $match/$group/$project/$sort to count logs by microservice and level with
+deterministic ordering. Optional from/to UTC calendar days are inclusive; service
+and level filters combine with them. Invalid/repeated flags, invalid dates/levels,
+and reversed ranges fail before database queries. Client/server query deadlines
+default to 5000 ms, configurable via QUERY_TIMEOUT_MS with a 60000 ms maximum.
+Output JSON contains totalLogs and groups. No raw log content or AI requests.
+Added concise README command, detailed db/AGGREGATION.md, and architecture notes.
+
+Validation: 285 unit/HTTP tests, 47 integration results, and 30 E2E results passed.
+Coverage thresholds, Compose validation, image builds, and readiness passed.
+Real MongoDB cases covered empty collections, 24 seed logs/12 groups, exact filter
+counts, UTC midnight boundaries, open-ended ranges, unchanged documents, and CLI
+success/error/help behavior. CLI errors do not expose the connection URI.
+Docker smoke check on application DB returned 24 logs/12 groups; filtered inventory
+error count for 2026-11-04 was 2, matching direct MongoDB count queries.
+git diff --check passed. Application remains running; isolated test services stopped.
+
+Changes left uncommitted for point 2. Point 5 problem categorization is untouched.
