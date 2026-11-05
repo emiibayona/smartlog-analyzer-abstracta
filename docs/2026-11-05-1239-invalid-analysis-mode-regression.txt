@@ -1,0 +1,15 @@
+Task: Add approved regressions for invalid ANALYSIS_MODE without API collapse.
+
+Added unit cases for empty, whitespace, uppercase, malformed, wildcard, and
+overlong modes. Verified analyzeLogs rejects invalid configuration before any
+database/provider work; a missing variable defaults to synthesis.
+Added real-process integration tests using temporary .env files with invalid
+and empty modes, synthetic credentials, and isolated MongoDB. Each child process
+first catches the engine configuration rejection, then starts the real server.
+Verified /api and /api/health both return 200 and the process stays alive.
+Child processes and temporary files are cleaned up. Local .env was not changed.
+
+Validation: 175 unit/HTTP tests passed; 26 integration test results passed;
+21 E2E test results passed. Compose validation and test image build passed.
+git diff --check passed. No production code changes or live OpenAI calls.
+Application services left running; isolated test services stopped.

@@ -1,0 +1,39 @@
+Task: Implement approved internal analysis engine; no new endpoints in this wave.
+Applied nodejs-backend-patterns and official OpenAI documentation on Responses
+structured outputs. No API-key provisioning tool was available in this session.
+
+Added optional-on-invocation OPENAI_API_KEY/OPENAI_MODEL and bounded analysis
+configuration. Appended missing empty key/model entries and default limits to
+local .env without displaying or replacing existing values. .env remains ignored.
+Real credentials and model access must be supplied by the user locally.
+
+Added a native-fetch OpenAI Responses adapter: strict JSON Schema, local schema
+and evidence validation, disabled storage/tools/retries, bounded response size,
+and deadlines covering both headers and body reading. Safe error codes distinguish
+timeout, refusal, wrong format, provider auth/rate-limit/server errors.
+Added input validation/redaction, byte-bounded whole-record chunks, and final
+multi-chunk synthesis. No file references are fetched or transmitted.
+
+Added repository-backed Pending/In progress/Completed/Failed persistence with
+acknowledged bounded writes. Completed records include structured report plus
+backward-compatible JSON-string result, summary, input references, model and prompt
+metadata, counts, and timestamps. Failed results clear partial report fields.
+Normal API endpoints do not require AI credentials; no analysis route was added.
+
+Validation:
+- 167 Jest unit/HTTP tests passed.
+- 23 Node database integration test results passed (includes engine scenario
+  subtests and parent), with real isolated MongoDB and local HTTP provider stub.
+- 21 Node E2E test results passed for existing endpoints.
+- Integration covered valid responses, wrong format/JSON, malformed envelope,
+  oversized response, refusal, incomplete output, timeout, auth/rate-limit/server
+  errors, and multi-chunk synthesis with saved metadata.
+- Unit tests covered persistence errors and acknowledgments, input bounds,
+  evidence references, redaction, chunk failure, and aggregate provider deadlines.
+- Compose config validation and all image builds passed; application healthy.
+- git diff --check passed; .env verified ignored.
+
+No paid/live OpenAI calls were made. These tests establish transport, validation,
+orchestration, and persistence behavior, not real-model output quality or account
+access. No durable job recovery/retry was added; process crashes may leave unfinished
+records. API/MongoDB left running; isolated test services stopped.

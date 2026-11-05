@@ -145,6 +145,8 @@ are `date`, `microservice`, `message`, and `status`. Dates are UTC calendar days
 message matching is a case-insensitive literal substring. Status must be exactly
 `Pending`, `In progress`, or `Completed`. Empty or repeated parameters are invalid.
 
+The analysis engine also records `Failed`, which is accepted by the status filter.
+
 `GET /api/analysis/:id` returns one analysis directly, with a string `id` and no
 MongoDB `_id` or `__v`. IDs must be 24 hexadecimal characters (case-insensitive).
 Malformed IDs return 400; valid missing IDs return 404. Lookup accepts no query
@@ -154,6 +156,72 @@ Analyses use the `analyses` collection. Pending/in-progress records may omit
 `result` and `message`. GET endpoints read saved records; they do not generate AI
 analyses or populate the application database with synthetic analysis results.
 Tests create temporary synthetic analyses only in the isolated test database.
+
+### Analysis engine (service only)
+
+The internal `analyzeLogs(logs)` service in `src/services/analysisEngine.js` analyzes
+a batch and saves its findings. No analysis POST endpoint is implemented in this
+wave. The caller must establish the MongoDB connection before invoking it.
+
+Set `OPENAI_API_KEY` and `OPENAI_MODEL` in your local `.env`. The key entry is an
+empty placeholder until you supply your own OpenAI API key; a Codex CLI login is
+not used. Choose an API model available to your account that supports Responses
+structured outputs. The engine uses `https://api.openai.com/v1/responses`, requests
+strict JSON Schema output, sets `store: false`, and does not enable tools or retries.
+Normal API startup and existing endpoints work without these optional settings.
+Compose passes the settings to the application; test services never receive the
+real key. No key or actual log contents are written to operational logs.
+
+`ANALYSIS_MODE=synthesis` selects the analysis focus and is sent to every LLM
+request and stored with the analysis metadata. Change it in `.env` without editing
+code, then recreate the API container (`docker compose up -d --force-recreate api`)
+or restart the local process. Mode labels must be lowercase identifiers with
+optional digits/hyphens, up to 64 characters; empty values are rejected. The default
+`synthesis` balances patterns, common issues, and insights. Other descriptive labels
+(for example `patterns`) guide model emphasis, without changing the report schema
+or guaranteeing a distinct algorithm. Chunking and the final synthesis phase are
+internal orchestration and remain independent of the configured focus.
+
+The service accepts 1–500 valid log objects, with optional stored `id`/`_id` values.
+Dates can be ISO strings or Date objects. Duplicate stored IDs are rejected.
+Input is capped at 256000 serialized bytes after common-secret redaction.
+File-reference payloads are never fetched or sent to the provider.
+Messages are treated as untrusted data, including any embedded instructions.
+Common token/password/credential patterns are redacted before transmission;
+this is a baseline filter, not a guarantee that arbitrary sensitive data is removed.
+
+`ANALYSIS_CHUNK_BYTES` defaults to 24000 (range 1024–64000). Whole log records
+are preserved, with at most 20 chunks. A record that cannot fit a chunk is rejected
+rather than silently truncated. Multiple chunks receive a final synthesis pass
+to correlate patterns and common issues. Each finding includes a title, severity,
+description, recommendation, and evidence IDs validated against the submitted
+batch. Reports contain `summary`, `patterns`, `commonIssues`, and `insights`.
+Empty finding arrays are valid when evidence is insufficient. Counts by level
+are calculated from the input, not estimated by the model.
+
+`ANALYSIS_REQUEST_TIMEOUT_MS` defaults to 30000 (maximum 120000).
+`ANALYSIS_TOTAL_TIMEOUT_MS` defaults to 120000 (maximum 600000), bounding the
+provider phase across chunks and synthesis. Database writes have independent
+5000 ms deadlines. Provider responses are capped at 256000 bytes and 8192 output
+tokens; incomplete/refused/malformed responses fail instead of being saved as
+successful reports. There are no automatic retries or partial-success results.
+
+Records transition `Pending` → `In progress` → `Completed` or `Failed`.
+Completed records contain a structured `report`, JSON-string `result` for
+compatibility, summary `message`, model/prompt version, log/chunk counts, level
+counts, timestamps, and input references. Mixed-service batches use
+`microservice: "multiple"` with an explicit `microservices` array. Raw log batches
+are not duplicated in the analysis collection; non-stored inputs have positional
+references such as `input-1`. Failed records have a safe `errorCode`, without raw
+provider responses or partial reports. If MongoDB cannot persist a failure, the
+service raises `PERSISTENCE_FAILED`; an interrupted process can leave an unfinished
+record. Durable job recovery/retry is outside this wave.
+
+Unit tests cover chunking, synthesis, redaction, evidence validation, timeouts,
+and persistence failures. Integration tests use real MongoDB plus a local HTTP
+provider stub for valid output, wrong schema/JSON, refusal, incomplete output,
+oversized responses, provider errors, and timeout. They make no paid OpenAI calls;
+real-model quality and account access require a separate opt-in evaluation.
 
 ### Running database integration and E2E tests
 

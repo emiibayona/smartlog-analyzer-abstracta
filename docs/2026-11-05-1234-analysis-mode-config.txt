@@ -1,0 +1,14 @@
+Task: Move the LLM analysis mode into environment configuration; user approved.
+
+Added ANALYSIS_MODE with synthesis default and lowercase identifier validation.
+Set local .env ANALYSIS_MODE=synthesis while preserving all other settings.
+Documented the setting in .env.example, README, architecture, and Compose.
+Every chunk/final request now receives configured mode. Separate phase metadata
+continues to distinguish chunk processing from final synthesis. Mode controls LLM
+focus, not orchestration or the required report/evidence schema. Persisted mode
+metadata and incremented prompt version to warehouse-logs-v2.
+
+Validation: 168 Jest tests, 23 integration test results, and 21 E2E results passed.
+Compose configuration and image builds passed. Verified running API container has
+ANALYSIS_MODE=synthesis. No live OpenAI calls made. git diff --check passed.
+API and MongoDB left running; isolated test services stopped.

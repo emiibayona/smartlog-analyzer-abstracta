@@ -9,7 +9,7 @@ function parseAnalysisQuery(query) {
   const parsed = parseLogQuery(common);
   if (Object.hasOwn(query, 'status')) {
     if (typeof status !== 'string' || !analysisStatuses.includes(status)) {
-      throw Object.assign(new Error('status must be Pending, In progress, or Completed'), { status: 400 });
+      throw Object.assign(new Error('status must be Pending, In progress, Completed, or Failed'), { status: 400 });
     }
     parsed.filter.status = status;
   }
