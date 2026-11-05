@@ -11,6 +11,7 @@ async function start() {
   await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false });
   await require('../db/models/log').createIndexes();
   await require('../db/models/analysis').Analysis.createIndexes();
+  await require('../db/models/rejectedLog').createIndexes();
   const server = app.listen(port, host, () => {
     log('info', 'server_started', { host, port });
   });

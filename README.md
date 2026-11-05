@@ -65,7 +65,58 @@ Source code is copied into the image; this setup does not provide live reload.
 
 ## Local development and tests
 
-### Retrieve logs
+### Submit a log
+
+`POST /api/logs` accepts one UTF-8 `application/json` object, up to 64 KiB.
+No query parameters or client-supplied IDs are accepted.
+
+```json
+{
+  "microservice": "inventory-service",
+  "date": "2026-11-05T12:00:00.000Z",
+  "level": "info",
+  "message": "Stock lookup completed",
+  "payload": "files/inventory.log"
+}
+```
+
+Required fields are `microservice`, `date`, `level`, and `message`. Service names
+must be one of the four documented warehouse services. Levels are exactly
+`info`, `warn`, or `error`. Dates must be real ISO timestamps with timezone and
+up to millisecond precision. Message must be non-blank and at most 16384 characters.
+Optional `payload` is a non-blank file reference string of at most 4096 characters;
+it is stored as text and is never fetched or opened. Unknown fields are rejected.
+
+Successful insertion returns **201** with the saved log and its generated `id`.
+Readable JSON that fails validation, or a primary insertion that fails to confirm,
+is preserved in **`rejected_logs`** with the original JSON, request ID, timestamp,
+reason, and validation issues. Only confirmed fallback writes return **202** with
+`{ status: "quarantined", id, requestId, reason, issues }`. This means preserved
+for later review, not a valid log or completed analysis. Invalid objects, arrays,
+and JSON primitives are preserved in the fallback as JSON text.
+
+Malformed/empty JSON returns 400, oversized requests 413, unsupported content
+types/encodings 415; these transport failures are not quarantined. If neither
+collection confirms storage, return 503 and retry. Both collections share MongoDB,
+so fallback does not protect against a complete database outage. A timeout can
+leave the primary write outcome uncertain: fallback records include the attempted
+primary ID for future reconciliation. Retries are not yet idempotent and can
+duplicate logs. No zero-loss guarantee is made for process crashes or outages.
+Fallback records retain submitted content, potentially including sensitive data;
+they are never printed in operational logs or exposed by a current read endpoint.
+
+### v2.0 TODO — rejected-log management (not implemented)
+
+- `GET /api/rejected-logs`: list/filter quarantined submissions.
+- `GET /api/rejected-logs/:id`: inspect one quarantined submission.
+- `PATCH /api/rejected-logs/:id`: correct a submission with validation.
+- `POST /api/rejected-logs/:id/replay`: retry ingestion with reconciliation and idempotency.
+
+These endpoints are planned for v2.0 and currently return 404. Access controls,
+review/audit history, retry policy, and sensitive-data retention must be defined
+before exposing them. Quarantined records are not retried automatically in v1.
+
+### List logs
 
 `GET /api/logs` returns `{ data, pagination: { page, limit, total, totalPages } }`.
 Logs include a string `id` and are sorted by date descending, then ID descending.

@@ -1,0 +1,30 @@
+Task: Implement approved POST /api/logs validation and fallback preservation.
+
+Added strict body validation for the four documented microservices, supported
+levels, real timezone-qualified ISO timestamps, required message, optional file
+reference payload, types/lengths, and unknown fields. Parser accepts only UTF-8
+application/json with 64 KiB limit and handles malformed/unsupported input safely.
+Primary confirmed insertion returns 201. Invalid readable JSON or primary write
+failure is stored as original JSON text in rejected_logs with request ID, timestamp,
+reason/issues, and optional attempted primary ID. Confirmed fallback returns 202.
+Neither write confirmed returns retryable 503. Writes use bounded timeouts.
+No input payload or raw storage errors are printed to operational logs.
+
+Documented same-database outage limitation, uncertain timeout outcomes, possible
+duplicates on retry, and transport failures not being quarantined. Added v2.0
+TODOs for fallback list/detail/correction/replay endpoints; no such routes added.
+
+Validation:
+- 138 unit/HTTP tests passed.
+- 10 database integration tests passed.
+- 21 Node E2E test results passed (18 subtests and three parents).
+- E2E tests covered all service/level combinations, length/date boundaries,
+  malformed/empty/oversized/type-invalid bodies, quarantine preservation,
+  primary storage failure, and failure of both storage paths.
+- Forced failures used collection validators denying only a unique synthetic
+  submission in the isolated test database; validators restored afterward.
+- Compose config validation, API/test builds, and API readiness checks passed.
+- git diff --check passed.
+
+Application API/MongoDB left running; isolated test services stopped. Tests did
+not add data to the application database or delete its persistent volumes.

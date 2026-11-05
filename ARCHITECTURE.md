@@ -63,5 +63,17 @@ ALSO THAT WE WILL NEED IN A FUTURE, A BETTER WAY TO SEE THE ANALYSIS.
 
 ## POST
 - [POST] `/api/logs` - Receive a log to insert
+  - UTF-8 JSON object, 64 KiB maximum; strict required field/type/date/service/level/length validation and no unknown fields.
+  - Confirmed valid insert returns 201. Readable invalid submissions and unconfirmed primary writes go to `rejected_logs`; confirmed fallback returns 202 with reason/issues and request ID.
+  - Malformed/empty body: 400; oversized body: 413; unsupported type/encoding: 415. Transport failures are not quarantined.
+  - Neither write confirmed: 503 for sender retry. Same-database fallback does not survive complete MongoDB outages; timeouts/retries can duplicate writes.
 - [POST] `/api/logs/analyze` - Receive a group of logs to analyze.
 - [POST] `/api/logs/stored/analyze` - Receive a group of IDs of stored logs to analyze.
+
+## v2.0 TODO — fallback management (not implemented in v1)
+- GET `/api/rejected-logs`: list/filter submissions.
+- GET `/api/rejected-logs/:id`: inspect original submission and failure reasons.
+- PATCH `/api/rejected-logs/:id`: correct invalid fields.
+- POST `/api/rejected-logs/:id/replay`: reconcile attempted primary ID and retry idempotently.
+- Define access controls, auditing, sensitive-data retention, and retry policies before release.
+- Fallback schema: receivedAt, requestId, submissionJson, reason (validation/primary_write), issues, optional primaryLogId. Original content is stored as JSON text to preserve unknown fields safely.
