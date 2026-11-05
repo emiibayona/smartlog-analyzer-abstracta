@@ -1,0 +1,22 @@
+Task: Implement remaining architecture GET endpoints using nodejs-backend-patterns.
+User approved plan including unit, integration, and happy/edge-path E2E tests.
+
+Added Mongoose Analysis schema and indexes. Statuses match architecture:
+Pending, In progress, Completed. Result and message are optional for pending work.
+Added thin controller, service, list-query validation reusing shared log behavior,
+and strict hexadecimal ObjectId validation. Services have client/server deadlines.
+List endpoint supports AND filters, UTC day, literal case-insensitive message,
+pagination defaults/limits, and stable descending date/ID sorting.
+Lookup returns a single public record; malformed ID gives 400, missing ID 404.
+Updated centralized handler to support expected 404 errors. Startup builds analysis
+indexes. No analysis-generation or POST functionality added.
+
+Updated architecture/README contract and E2E script to discover all E2E files.
+Synthetic analysis fixtures are created and cleaned up only in the isolated test DB.
+No fake AI results were inserted into the application database.
+
+Validation: 94 unit/HTTP tests, 9 database integration tests, and 13 Node E2E
+test results passed (11 subtests plus two parent tests). Compose validation and
+API/test builds passed. Localhost smoke checks for listing, invalid IDs, and missing
+IDs returned 200/400/404 respectively. git diff --check passed.
+Application API and MongoDB remain running; isolated test services stopped.

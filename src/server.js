@@ -10,6 +10,7 @@ async function start() {
   app.locals.healthTimeoutMs = config.healthTimeoutMs;
   await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10000, bufferCommands: false });
   await require('../db/models/log').createIndexes();
+  await require('../db/models/analysis').Analysis.createIndexes();
   const server = app.listen(port, host, () => {
     log('info', 'server_started', { host, port });
   });

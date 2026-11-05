@@ -86,7 +86,25 @@ return HTTP 200 with empty data. No matches produce `totalPages: 0`.
 Example: `http://localhost:3000/api/logs?microservice=inventory-service&level=error&page=1&limit=10`.
 Counts and page data are separate reads, so concurrent writes may change totals.
 
-### Database integration and E2E tests
+### Retrieve analyses
+
+`GET /api/analysis` (also `/api/analysis/`) uses the log listing response envelope,
+pagination defaults/limits, and newest-first date/ID sorting. Supported filters
+are `date`, `microservice`, `message`, and `status`. Dates are UTC calendar days;
+message matching is a case-insensitive literal substring. Status must be exactly
+`Pending`, `In progress`, or `Completed`. Empty or repeated parameters are invalid.
+
+`GET /api/analysis/:id` returns one analysis directly, with a string `id` and no
+MongoDB `_id` or `__v`. IDs must be 24 hexadecimal characters (case-insensitive).
+Malformed IDs return 400; valid missing IDs return 404. Lookup accepts no query
+parameters. Database timeouts return 503 and unexpected failures return generic 500.
+
+Analyses use the `analyses` collection. Pending/in-progress records may omit
+`result` and `message`. GET endpoints read saved records; they do not generate AI
+analyses or populate the application database with synthetic analysis results.
+Tests create temporary synthetic analyses only in the isolated test database.
+
+### Running database integration and E2E tests
 
 `npm test` runs unit and isolated HTTP tests. Run real database integration and
 E2E tests through Docker (the test image includes development dependencies):
