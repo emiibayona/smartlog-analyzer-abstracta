@@ -101,3 +101,6 @@ Luego, hice un maquetado de AGENTS.MD y ARCHITECTURE.MD base. Para hacer una con
 Esta plataforma es agnostica al sistema operativo en el cual se desee correr.
 
 Fuera de esta v1 de la app quedó fuera el re procesamiento de logs rejected. La idea principal es no perder la potencia de procesamiento pero si tenemos un fallo, poder recurrir a re procesar en otro momento asyncronicamente.
+
+
+Link: https://github.com/emiibayona/smartlog-analyzer-abstracta
