@@ -92,3 +92,12 @@ Optional date range: append `-- --from 2026-11-04 --to 2026-11-04`.
 - [API and configuration reference](docs/REFERENCE.md)
 - [Aggregation command and filters](db/AGGREGATION.md)
 - [Architecture and v2.0 TODOs](ARCHITECTURE.md)
+
+
+## Summary (Spanish)
+En primera instancia, hice un research de como manejar el LOGs a través del LLM.
+Luego, hice un maquetado de AGENTS.MD y ARCHITECTURE.MD base. Para hacer una construcción iterativa de la app paso a paso, el cual se refleja documentado en los commits y los docs que le indique que genere la IA por cada iteración que ella misma realiza.
+
+Esta plataforma es agnostica al sistema operativo en el cual se desee correr.
+
+Fuera de esta v1 de la app quedó fuera el re procesamiento de logs rejected. La idea principal es no perder la potencia de procesamiento pero si tenemos un fallo, poder recurrir a re procesar en otro momento asyncronicamente.
